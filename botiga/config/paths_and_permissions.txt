@@ -1,0 +1,3 @@
+All data files are under ./data for the packaged example.
+In production, move the data folder outside DocumentRoot and assign ownership to web server user.
+Do not store CVV. Use encryption for card numbers.

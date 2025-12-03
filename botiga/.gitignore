@@ -1,0 +1,5 @@
+config/.env
+logs/
+compra/area_clients/
+data/
+*.zip

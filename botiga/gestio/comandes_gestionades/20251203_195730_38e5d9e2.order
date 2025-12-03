@@ -1,0 +1,19 @@
+{
+    "id": "20251203_195730_38e5d9e2",
+    "user": "client1",
+    "items": [
+        {
+            "product_id": "0001",
+            "quantity": 2
+        },
+        {
+            "product_id": "0002",
+            "quantity": 2
+        }
+    ],
+    "subtotal": 0,
+    "iva": 0,
+    "total": 0,
+    "status": "pendent",
+    "created_at": "2025-12-03T19:57:30+01:00"
+}

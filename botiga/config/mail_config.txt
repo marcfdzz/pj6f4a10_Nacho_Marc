@@ -1,0 +1,6 @@
+MAIL_HOST=example.smtp
+MAIL_PORT=587
+MAIL_USER=user
+MAIL_PASS=pass
+MAIL_FROM=botiga@example.local
+Support address: support@empresa.tld

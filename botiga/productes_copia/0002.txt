@@ -1,0 +1,5 @@
+{
+  "name": "Pel·lícula B",
+  "description": "Descripció de Pel·lícula B",
+  "price": "14.50"
+}
