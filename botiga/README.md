@@ -8,3 +8,7 @@ Paths:
 - productes_copia/ : public copy of products
 Security notes:
 - This example is for educational purposes. For production, follow the documentation in config/.
+
+
+
+Hay que arreglar que cuando creas un usuario nuevo desde trabajadores en el apartado de clients.php, y luego vas a iniciar sesion, no deja.

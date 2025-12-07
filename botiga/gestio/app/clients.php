@@ -1,17 +1,46 @@
 <?php
 session_start();
-if(empty($_SESSION['worker'])){ header('Location: login.php'); exit;}
+require_once __DIR__ . '/../../classes/FileManager.php';
+require_once __DIR__ . '/../../classes/Client.php';
 
-$clientsFile = __DIR__.'/../../data/clients.json';
-$clients = json_decode(file_get_contents($clientsFile), true);
+// Check role: admin or treballador
+if (empty($_SESSION['user']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'treballador')) {
+    header('Location: login.php');
+    exit;
+}
+
+$clientsFile = __DIR__ . '/../clients/clients.json';
+$clientsData = FileManager::readJson($clientsFile);
 
 // Handle delete
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
-    $clients = array_filter($clients, function($c) {
-        return $c['id'] !== $_POST['delete_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
+    $deleteId = $_POST['delete_id'];
+    
+    // Find client to get username for folder deletion (optional, but good practice)
+    $usernameToDelete = null;
+    foreach ($clientsData as $c) {
+        if (($c['id'] ?? '') === $deleteId) {
+            $usernameToDelete = $c['username'];
+            break;
+        }
+    }
+
+    $clientsData = array_filter($clientsData, function($c) use ($deleteId) {
+        return ($c['id'] ?? '') !== $deleteId;
     });
-    $clients = array_values($clients);
-    file_put_contents($clientsFile, json_encode($clients, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+    $clientsData = array_values($clientsData);
+    FileManager::saveJson($clientsFile, $clientsData);
+
+    // Optional: Remove individual folder if it exists
+    if ($usernameToDelete) {
+        $userDir = __DIR__ . '/../../compra/area_clients/' . $usernameToDelete;
+        // We won't recursively delete to be safe, but we could if required.
+        // For now, let's leave the folder or just try to delete the 'dades' file.
+        if (file_exists($userDir . '/dades')) {
+            unlink($userDir . '/dades');
+        }
+    }
+
     header('Location: clients.php');
     exit;
 }
@@ -19,33 +48,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 // Handle add/edit
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $id = $_POST['id'] ?? '';
-    $newClient = [
-        'id' => $id ?: str_pad(count($clients) + 1, 4, '0', STR_PAD_LEFT),
-        'username' => $_POST['username'],
-        'password_hash' => !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : ($_POST['existing_hash'] ?? ''),
-        'fullname' => $_POST['fullname'],
-        'email' => $_POST['email'],
-        'phone' => $_POST['phone'],
-        'address' => $_POST['address'],
-        'card_encrypted' => $_POST['card_encrypted'] ?? '',
-        'card_exp' => $_POST['card_exp'] ?? '',
-        'created_at' => $_POST['created_at'] ?? date('c')
-    ];
     
-    if ($id) {
-        // Edit existing
-        foreach ($clients as $key => $c) {
-            if ($c['id'] === $id) {
-                $clients[$key] = $newClient;
-                break;
-            }
+    // Determine ID
+    if (!$id) {
+        $maxId = 0;
+        foreach ($clientsData as $c) {
+            if (intval($c['id'] ?? 0) > $maxId) $maxId = intval($c['id']);
         }
-    } else {
-        // Add new
-        $clients[] = $newClient;
+        $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
     }
-    
-    file_put_contents($clientsFile, json_encode($clients, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+
+    // Password handling
+    $passwordHash = $_POST['existing_hash'] ?? '';
+    if (!empty($_POST['password'])) {
+        $passwordHash = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    }
+
+    // Instantiate Client object
+    $client = new Client(
+        $_POST['username'],
+        $passwordHash,
+        $_POST['email'],
+        $_POST['fullname'],
+        $_POST['address'],
+        $_POST['phone'],
+        $id
+    );
+
+    // Additional fields not in constructor but in array
+    $clientArray = $client->toArray();
+    $clientArray['card_encrypted'] = $_POST['card_encrypted'] ?? '';
+    $clientArray['card_exp'] = $_POST['card_exp'] ?? '';
+    $clientArray['created_at'] = $_POST['created_at'] ?? date('c');
+
+    // Update list
+    $found = false;
+    foreach ($clientsData as $key => $c) {
+        if (($c['id'] ?? '') === $id) {
+            $clientsData[$key] = $clientArray;
+            $found = true;
+            break;
+        }
+    }
+    if (!$found) {
+        $clientsData[] = $clientArray;
+    }
+
+    // Save main list
+    FileManager::saveJson($clientsFile, $clientsData);
+
+    // Save individual client data
+    $userDir = __DIR__ . '/../../compra/area_clients/' . $client->getUsername();
+    if (!is_dir($userDir)) {
+        mkdir($userDir, 0777, true);
+    }
+    FileManager::saveJson($userDir . '/dades', $clientArray);
+
     header('Location: clients.php');
     exit;
 }
@@ -53,8 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 // Get client for editing
 $editClient = null;
 if (isset($_GET['edit'])) {
-    foreach ($clients as $c) {
-        if ($c['id'] === $_GET['edit']) {
+    foreach ($clientsData as $c) {
+        if (($c['id'] ?? '') === $_GET['edit']) {
             $editClient = $c;
             break;
         }
@@ -67,35 +125,21 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestió de Clients</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { color: #333; }
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; margin: 2px; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        table { width: 100%; background: white; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: bold; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .form-container { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    </style>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Gestió de Clients</h1>
-        <a href="dashboard.php" class="btn btn-secondary">← Tornar al Dashboard</a>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Gestió de Clients</h1>
+            <a href="dashboard.php" class="btn btn-secondary">← Tornar al Dashboard</a>
+        </div>
         
         <?php if ($editClient || isset($_GET['add'])): ?>
         <div class="form-container">
             <h2><?php echo $editClient ? 'Editar Client' : 'Afegir Nou Client'; ?></h2>
             <form method="post">
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($editClient['id'] ?? ''); ?>">
-                <input type="hidden" name="existing_hash" value="<?php echo htmlspecialchars($editClient['password_hash'] ?? ''); ?>">
+                <input type="hidden" name="existing_hash" value="<?php echo htmlspecialchars($editClient['password'] ?? ''); ?>">
                 <input type="hidden" name="created_at" value="<?php echo htmlspecialchars($editClient['created_at'] ?? ''); ?>">
                 
                 <div class="form-group">
@@ -110,7 +154,7 @@ if (isset($_GET['edit'])) {
                 
                 <div class="form-group">
                     <label>Nom complet:</label>
-                    <input type="text" name="fullname" value="<?php echo htmlspecialchars($editClient['fullname'] ?? ''); ?>" required>
+                    <input type="text" name="fullname" value="<?php echo htmlspecialchars($editClient['name'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
@@ -143,7 +187,7 @@ if (isset($_GET['edit'])) {
             </form>
         </div>
         <?php else: ?>
-        <a href="?add=1" class="btn btn-primary" style="margin: 20px 0;">+ Afegir Client</a>
+        <a href="?add=1" class="btn btn-primary" style="margin-bottom: 20px;">+ Afegir Client</a>
         
         <table>
             <thead>
@@ -157,17 +201,18 @@ if (isset($_GET['edit'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($clients as $c): ?>
+                <?php foreach($clientsData as $c): ?>
                 <tr>
-                    <td><?php echo htmlspecialchars($c['id']); ?></td>
-                    <td><?php echo htmlspecialchars($c['username']); ?></td>
-                    <td><?php echo htmlspecialchars($c['fullname']); ?></td>
-                    <td><?php echo htmlspecialchars($c['email']); ?></td>
-                    <td><?php echo htmlspecialchars($c['phone']); ?></td>
+                    <td><?php echo htmlspecialchars($c['id'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['username'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['name'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['email'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['phone'] ?? ''); ?></td>
                     <td>
-                        <a href="?edit=<?php echo urlencode($c['id']); ?>" class="btn btn-primary">Editar</a>
+                        <a href="?edit=<?php echo urlencode($c['id'] ?? ''); ?>" class="btn btn-primary">Editar</a>
                         <form method="post" style="display:inline;" onsubmit="return confirm('Segur que vols eliminar aquest client?');">
-                            <input type="hidden" name="delete_id" value="<?php echo htmlspecialchars($c['id']); ?>">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <input type="hidden" name="delete_id" value="<?php echo htmlspecialchars($c['id'] ?? ''); ?>">
                             <button type="submit" class="btn btn-danger">Eliminar</button>
                         </form>
                     </td>

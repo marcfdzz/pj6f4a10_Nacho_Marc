@@ -1,49 +1,88 @@
 <?php
 session_start();
-if(empty($_SESSION['user'])){ header('Location: login.php'); exit; }
-$areaDir = __DIR__.'/area_clients/'.$_SESSION['user'];
-$cistellaFile = $areaDir.'/cistella.json';
-if(!file_exists($cistellaFile)){ echo 'No hi ha cistella'; exit;}
-$cart = json_decode(file_get_contents($cistellaFile), true);
-$ordersFile = __DIR__.'/../data/orders.json';
-$orders = json_decode(file_get_contents($ordersFile), true);
-$id = date('Ymd_His').'_'.substr(md5(json_encode($cart)),0,8);
-$order = ['id'=>$id,'user'=>$_SESSION['user'],'items'=>$cart['items'],'subtotal'=>0,'iva'=>0,'total'=>0,'status'=>'pendent','created_at'=>date('c')];
-$orders[] = $order;
-file_put_contents($ordersFile, json_encode($orders, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
-$userOrdersDir = $areaDir.'/orders';
-if (!file_exists($userOrdersDir)) {
-    mkdir($userOrdersDir, 0777, true);
-}
-// Save the full order details, not just the raw cart
-file_put_contents($userOrdersDir.'/'.$id.'.order', json_encode($order, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
-// Remove the cart file
-if (file_exists($cistellaFile)) {
-    unlink($cistellaFile);
+require_once __DIR__ . '/../classes/FileManager.php';
+require_once __DIR__ . '/../classes/Cistella.php';
+require_once __DIR__ . '/../classes/Comanda.php';
+require_once __DIR__ . '/../classes/Producte.php';
+
+if (empty($_SESSION['user']) || ($_SESSION['role'] ?? '') !== 'client') {
+    header('Location: login.php');
+    exit;
 }
 
-$backupOrdersDir = __DIR__.'/../comandes_copia';
-if (!file_exists($backupOrdersDir)) {
-    mkdir($backupOrdersDir, 0777, true);
+$currentUser = $_SESSION['user'];
+$areaDir = __DIR__.'/area_clients/' . $currentUser;
+$cistellaFile = $areaDir . '/cistella';
+
+if (!file_exists($cistellaFile)) {
+    echo "No hi ha cistella.";
+    exit;
 }
-file_put_contents($backupOrdersDir.'/'.$id.'.order', json_encode($order, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+
+$cartData = FileManager::readJson($cistellaFile);
+$cistella = new Cistella($cartData);
+$items = $cistella->getProductes();
+
+if (empty($items)) {
+    echo "Cistella buida.";
+    exit;
+}
+
+// Calculate total
+$productsFile = __DIR__.'/../gestio/productes/productes.json';
+$productsData = FileManager::readJson($productsFile);
+
+$total = 0;
+foreach ($items as $pid => $qty) {
+    foreach ($productsData as $p) {
+        if (($p['id'] ?? '') == $pid) {
+            $total += floatval($p['preu'] ?? 0) * $qty;
+            break;
+        }
+    }
+}
+$totalWithIva = $total * 1.21;
+
+// Create Comanda object
+$orderId = date('Ymd_His') . '_' . substr(md5(uniqid()), 0, 8);
+$date = date('c');
+
+$comanda = new Comanda(
+    $orderId,
+    $date,
+    $currentUser,
+    $items,
+    $totalWithIva
+);
+
+$orderData = $comanda->toArray();
+
+// Save to user area (directly in user folder as per requirement)
+FileManager::saveJson($areaDir . '/' . $orderId, $orderData);
+
+// Save to comandes_copia
+FileManager::saveJson(__DIR__ . '/../comandes_copia/' . $orderId, $orderData);
+
+// Clear cart
+$cistella->setProductes([]);
+FileManager::saveJson($cistellaFile, []);
+
 ?>
 <!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comanda Creada</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        .message { margin: 20px 0; font-size: 1.2em; color: green; }
-        .btn { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-        .btn:hover { background-color: #0056b3; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>Comanda realitzada amb èxit</h1>
-    <p class="message">Comanda creada amb id: <?php echo $id; ?></p>
-    <a href="dashboard.php" class="btn">Tornar al Menú</a>
+    <div class="container" style="text-align: center;">
+        <h1>Comanda realitzada amb èxit</h1>
+        <div class="alert alert-success" style="font-size: 1.2em;">Comanda creada amb id: <?php echo htmlspecialchars($orderId); ?></div>
+        <p style="font-size: 1.2em;">Total: <strong><?php echo number_format($totalWithIva, 2); ?> €</strong></p>
+        <div class="mt-20">
+            <a href="dashboard.php" class="btn btn-primary">Tornar al Menú</a>
+        </div>
+    </div>
 </body>
 </html>

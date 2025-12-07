@@ -1,81 +1,31 @@
 <?php
-/**
- * Client class – represents a client loaded from a JSON file.
- *
- * Expected JSON structure (example):
- * {
- *   "id": 1,
- *   "name": "Acme Corp",
- *   "email": "contact@acme.com",
- *   "address": "123 Main St",
- *   "phone": "555-1234"
- * }
- */
-class Client {
-    /** @var array Holds the raw data loaded from JSON */
-    private $data = [];
+require_once 'User.php';
 
-    /**
-     * Constructor – optionally pass an associative array.
-     * @param array $data
-     */
-    public function __construct(array $data = []) {
-        $this->data = $data;
+class Client extends User {
+    private $address;
+    private $phone;
+    private $id;
+
+    public function __construct($username, $password, $email, $name, $address, $phone, $id = null) {
+        parent::__construct($username, $password, 'client', $email, $name);
+        $this->address = $address;
+        $this->phone = $phone;
+        $this->id = $id;
     }
 
-    /**
-     * Load a client from a JSON file.
-     * @param string $jsonFilePath Absolute path to the JSON file.
-     * @return self|null Returns a Client instance or null on failure.
-     */
-    public static function loadFromFile(string $jsonFilePath): ?self {
-        if (!file_exists($jsonFilePath)) {
-            trigger_error("Client JSON file not found: $jsonFilePath", E_USER_WARNING);
-            return null;
-        }
-        $json = file_get_contents($jsonFilePath);
-        $data = json_decode($json, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            trigger_error('Invalid JSON in client file: ' . json_last_error_msg(), E_USER_WARNING);
-            return null;
-        }
-        return new self($data);
-    }
+    public function getAddress() { return $this->address; }
+    public function getPhone() { return $this->phone; }
+    public function getId() { return $this->id; }
 
-    /**
-     * Magic getter to access data fields as properties.
-     */
-    public function __get(string $name) {
-        return $this->data[$name] ?? null;
-    }
+    public function setAddress($address) { $this->address = $address; }
+    public function setPhone($phone) { $this->phone = $phone; }
 
-    /**
-     * Magic setter to modify data fields.
-     */
-    public function __set(string $name, $value): void {
-        $this->data[$name] = $value;
-    }
-
-    /**
-     * Export the client data back to an associative array.
-     * @return array
-     */
-    public function toArray(): array {
-        return $this->data;
-    }
-
-    /**
-     * Save the current client data back to its JSON file.
-     * @param string $jsonFilePath Path where the JSON should be saved.
-     * @return bool Success status.
-     */
-    public function saveToFile(string $jsonFilePath): bool {
-        $json = json_encode($this->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        if ($json === false) {
-            trigger_error('Failed to encode client data to JSON.', E_USER_WARNING);
-            return false;
-        }
-        return file_put_contents($jsonFilePath, $json) !== false;
+    public function toArray() {
+        $data = parent::toArray();
+        $data['address'] = $this->address;
+        $data['phone'] = $this->phone;
+        $data['id'] = $this->id;
+        return $data;
     }
 }
 ?>

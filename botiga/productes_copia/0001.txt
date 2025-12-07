@@ -1,5 +1,0 @@
-{
-  "name": "Pel·lícula A",
-  "description": "Descripció de Pel·lícula A",
-  "price": "9.99"
-}
