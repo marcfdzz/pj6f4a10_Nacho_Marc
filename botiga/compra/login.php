@@ -4,35 +4,38 @@ require_once __DIR__ . '/../classes/FileManager.php';
 require_once __DIR__ . '/../classes/Client.php';
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-  $u = $_POST['username'] ?? '';
-  $p = $_POST['password'] ?? '';
+  $usuarioInput = $_POST['nombreUsuario'] ?? '';
+  $contrasenaInput = $_POST['contrasena'] ?? '';
 
-  $clientsData = FileManager::readJson(__DIR__ . '/../gestio/clients/clients.json');
-  $found = null;
+  $datosClientes = FileManager::readJson(__DIR__ . '/../gestio/clients/clients.json');
+  $encontrado = null;
 
-  foreach ($clientsData as $cData) {
-      if ($cData['username'] === $u && password_verify($p, $cData['password'])) {
-          $found = new Client(
-              $cData['username'],
-              $cData['password'],
-              $cData['email'] ?? '',
-              $cData['name'] ?? '',
-              $cData['address'] ?? '',
-              $cData['phone'] ?? '',
-              $cData['id'] ?? null
+  foreach ($datosClientes as $datosCliente) {
+      $dbUsuario = $datosCliente['nombreUsuario'] ?? $datosCliente['username'] ?? '';
+      $dbContrasena = $datosCliente['contrasena'] ?? $datosCliente['password'] ?? '';
+      
+      if ($dbUsuario === $usuarioInput && password_verify($contrasenaInput, $dbContrasena)) {
+          $encontrado = new Client(
+              $dbUsuario,
+              $dbContrasena,
+              $datosCliente['correo'] ?? $datosCliente['email'] ?? '',
+              $datosCliente['nombre'] ?? $datosCliente['name'] ?? '',
+              $datosCliente['direccion'] ?? $datosCliente['address'] ?? '',
+              $datosCliente['telefono'] ?? $datosCliente['phone'] ?? '',
+              $datosCliente['id'] ?? null
           );
           break;
       }
   }
 
-  if ($found) {
-      $_SESSION['user'] = $found->getUsername();
-      $_SESSION['role'] = 'client';
+  if ($encontrado) {
+      $_SESSION['usuario'] = $encontrado->obtenerNombreUsuario();
+      $_SESSION['rol'] = 'client';
       header('Location: dashboard.php');
       exit;
   }
 
-  $error='Credencials incorrectes';
+  $error='Credenciales incorrectas';
 }
 ?>
 <!DOCTYPE html>
@@ -43,21 +46,25 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container" style="max-width: 400px;">
-        <h1 style="text-align: center;">Login Compra</h1>
-        <form method="post">
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Iniciar Sesión</h1>
+        </div>
+        <form method="post" class="login-form">
             <div class="form-group">
-                <label>Usuari:</label>
-                <input type="text" name="username" required>
+                <label for="nombreUsuario">Usuario</label>
+                <input type="text" id="nombreUsuario" name="nombreUsuario" required>
             </div>
             <div class="form-group">
-                <label>Contrasenya:</label>
-                <input name="password" type="password" required>
+                <label for="contrasena">Contraseña</label>
+                <input type="password" id="contrasena" name="contrasena" required>
             </div>
-            <button class="btn btn-primary" style="width: 100%;">Entrar</button>
+            <button class="btn btn-primary">Entrar</button>
         </form>
-        <?php if(!empty($error)) echo "<div class='alert alert-danger mt-20'>".htmlspecialchars($error)."</div>"; ?>
-        <p style="text-align: center; margin-top: 20px;"><a href="../index.php">← Tornar a l'inici</a></p>
+        <?php if(!empty($error)) echo "<div class='alert alert-danger'>".htmlspecialchars($error)."</div>"; ?>
+        <div class="login-footer">
+            <p><a href="../index.php">← Volver al inicio</a></p>
+        </div>
     </div>
 </body>
 </html>

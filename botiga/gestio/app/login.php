@@ -5,32 +5,46 @@ require_once __DIR__ . '/../../classes/Treballador.php';
 require_once __DIR__ . '/../../classes/Admin.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $u = $_POST['username'] ?? '';
-    $p = $_POST['password'] ?? '';
+    $usuarioInput = $_POST['nombreUsuario'] ?? '';
+    $contrasenaInput = $_POST['contrasena'] ?? '';
 
-    $workersData = FileManager::readJson(__DIR__ . '/../treballadors/treballadors.json');
-    $found = null;
+    $datosTrabajadores = FileManager::readJson(__DIR__ . '/../treballadors/treballadors.json');
+    $encontrado = null;
 
-    foreach ($workersData as $wData) {
-        if ($wData['username'] === $u && password_verify($p, $wData['password'])) {
-             // Instantiate object
-             if ($wData['role'] === 'admin') {
-                 $found = new Admin($wData['username'], $wData['password'], $wData['email'] ?? '', $wData['name'] ?? '');
+    foreach ($datosTrabajadores as $datosT) {
+        $dbUsuario = $datosT['nombreUsuario'] ?? $datosT['username'] ?? '';
+        $dbContrasena = $datosT['contrasena'] ?? $datosT['password'] ?? '';
+        $dbRol = $datosT['rol'] ?? $datosT['role'] ?? '';
+
+        if ($dbUsuario === $usuarioInput && password_verify($contrasenaInput, $dbContrasena)) {
+             // Instanciar objeto
+             if ($dbRol === 'admin') {
+                 $encontrado = new Admin(
+                    $dbUsuario, 
+                    $dbContrasena, 
+                    $datosT['correo'] ?? $datosT['email'] ?? '', 
+                    $datosT['nombre'] ?? $datosT['name'] ?? ''
+                 );
              } else {
-                 $found = new Treballador($wData['username'], $wData['password'], $wData['email'] ?? '', $wData['name'] ?? '');
+                 $encontrado = new Treballador(
+                    $dbUsuario, 
+                    $dbContrasena, 
+                    $datosT['correo'] ?? $datosT['email'] ?? '', 
+                    $datosT['nombre'] ?? $datosT['name'] ?? ''
+                 );
              }
              break;
         }
     }
 
-    if ($found) {
-        $_SESSION['user'] = $found->getUsername();
-        $_SESSION['role'] = $found->getRole();
+    if ($encontrado) {
+        $_SESSION['usuario'] = $encontrado->obtenerNombreUsuario();
+        $_SESSION['rol'] = $encontrado->obtenerRol();
         header('Location: dashboard.php');
         exit;
     }
 
-    $error = 'Credencials incorrectes';
+    $error = 'Credenciales incorrectas';
 }
 ?>
 <!DOCTYPE html>
@@ -44,17 +58,17 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         <h1 style="text-align: center;">Login Gestió</h1>
         <form method="post">
             <div class="form-group">
-                <label>Usuari:</label>
-                <input type="text" name="username" required>
+                <label>Usuario:</label>
+                <input type="text" name="nombreUsuario" required>
             </div>
             <div class="form-group">
-                <label>Contrasenya:</label>
-                <input type="password" name="password" required>
+                <label>Contraseña:</label>
+                <input type="password" name="contrasena" required>
             </div>
             <button class="btn btn-primary" style="width: 100%;">Entrar</button>
         </form>
         <?php if(!empty($error)) echo '<div class="alert alert-danger mt-20">'.htmlspecialchars($error).'</div>'; ?>
-        <p style="text-align: center; margin-top: 20px;"><a href="../../index.php">← Tornar a l'inici</a></p>
+        <p style="text-align: center; margin-top: 20px;"><a href="../../index.php">← Volver al inicio</a></p>
     </div>
 </body>
 </html>

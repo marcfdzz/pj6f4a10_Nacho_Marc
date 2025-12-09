@@ -2,28 +2,28 @@
 require_once 'User.php';
 
 class Client extends User {
-    private $address;
-    private $phone;
+    private $direccion;
+    private $telefono;
     private $id;
 
-    public function __construct($username, $password, $email, $name, $address, $phone, $id = null) {
-        parent::__construct($username, $password, 'client', $email, $name);
-        $this->address = $address;
-        $this->phone = $phone;
+    public function __construct($nombreUsuario, $contrasena, $correo, $nombre, $direccion, $telefono, $id = null) {
+        parent::__construct($nombreUsuario, $contrasena, 'client', $correo, $nombre);
+        $this->direccion = $direccion;
+        $this->telefono = $telefono;
         $this->id = $id;
     }
 
-    public function getAddress() { return $this->address; }
-    public function getPhone() { return $this->phone; }
-    public function getId() { return $this->id; }
+    public function obtenerDireccion() { return $this->direccion; }
+    public function obtenerTelefono() { return $this->telefono; }
+    public function obtenerId() { return $this->id; }
 
-    public function setAddress($address) { $this->address = $address; }
-    public function setPhone($phone) { $this->phone = $phone; }
+    public function establecerDireccion($direccion) { $this->direccion = $direccion; }
+    public function establecerTelefono($telefono) { $this->telefono = $telefono; }
 
     public function toArray() {
         $data = parent::toArray();
-        $data['address'] = $this->address;
-        $data['phone'] = $this->phone;
+        $data['direccion'] = $this->direccion;
+        $data['telefono'] = $this->telefono;
         $data['id'] = $this->id;
         return $data;
     }

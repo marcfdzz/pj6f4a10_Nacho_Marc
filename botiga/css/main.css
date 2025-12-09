@@ -1,0 +1,157 @@
+:root {
+    --primary-color: #232f3e; /* Amazon Dark Blue */
+    --secondary-color: #ff9900; /* Amazon Orange */
+    --accent-color: #febd69; /* Lighter Orange for buttons */
+    --background-color: #f3f3f3; /* Light gray background */
+    --card-bg: #ffffff;
+    --text-color: #111111;
+    --text-light: #555555;
+    --border-color: #dddddd;
+    --success-color: #067d62;
+    --error-color: #c40000;
+    --pc-orange: #ff6000; /* PcComponentes Orange */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Amazon Ember", Arial, sans-serif; /* Amazon uses Amazon Ember */
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: #007185;
+}
+
+a:hover {
+    color: #c7511f;
+    text-decoration: underline;
+}
+
+/* Utilities */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 8px; /* Slightly rounded */
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid;
+    transition: all 0.2s ease;
+    text-decoration: none !important;
+}
+
+.btn-primary {
+    background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+    border-color: #a88734 #9c7e31 #846a29;
+    color: #111;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to bottom, #f5d78e, #eeb933);
+}
+
+.btn-client {
+    background-color: var(--pc-orange);
+    color: white;
+    border: none;
+}
+.btn-client:hover {
+    background-color: #e55600;
+}
+
+.btn-worker {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+.btn-worker:hover {
+    background-color: #37475a;
+}
+
+/* Card Style */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px; /* Amazon is boxy, PcComp is slightly rounded */
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #888;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) inset;
+    outline: none;
+}
+
+input:focus {
+    border-color: #e77600;
+    box-shadow: 0 0 3px 2px rgba(228, 121, 17, 0.5);
+}
+
+/* Login Page Specifics */
+.login-container {
+    max-width: 350px;
+    margin: 50px auto;
+    background: white;
+    padding: 20px 26px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.login-header h1 {
+    font-weight: 400;
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.login-footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.alert {
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 13px;
+}
+.alert-danger {
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+    background-color: #fff4f4;
+/* Warning icon style could be added */
+}

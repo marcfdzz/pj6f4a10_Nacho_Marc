@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../classes/FileManager.php';
 require_once __DIR__ . '/../../classes/Client.php';
 
 // Check role: admin or treballador
-if (empty($_SESSION['user']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'treballador')) {
+if (empty($_SESSION['usuario']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: login.php');
     exit;
 }
@@ -16,11 +16,11 @@ $clientsData = FileManager::readJson($clientsFile);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
     
-    // Find client to get username for folder deletion (optional, but good practice)
+    // Find client to get username for folder deletion
     $usernameToDelete = null;
     foreach ($clientsData as $c) {
         if (($c['id'] ?? '') === $deleteId) {
-            $usernameToDelete = $c['username'];
+            $usernameToDelete = $c['nombreUsuario'] ?? $c['username'] ?? null;
             break;
         }
     }
@@ -34,8 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     // Optional: Remove individual folder if it exists
     if ($usernameToDelete) {
         $userDir = __DIR__ . '/../../compra/area_clients/' . $usernameToDelete;
-        // We won't recursively delete to be safe, but we could if required.
-        // For now, let's leave the folder or just try to delete the 'dades' file.
         if (file_exists($userDir . '/dades')) {
             unlink($userDir . '/dades');
         }
@@ -60,18 +58,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
     // Password handling
     $passwordHash = $_POST['existing_hash'] ?? '';
-    if (!empty($_POST['password'])) {
-        $passwordHash = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    if (!empty($_POST['contrasena'])) {
+        $passwordHash = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
     }
 
     // Instantiate Client object
     $client = new Client(
-        $_POST['username'],
+        $_POST['nombreUsuario'],
         $passwordHash,
-        $_POST['email'],
-        $_POST['fullname'],
-        $_POST['address'],
-        $_POST['phone'],
+        $_POST['correo'],
+        $_POST['nombre'],
+        $_POST['direccion'],
+        $_POST['telefono'],
         $id
     );
 
@@ -98,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     FileManager::saveJson($clientsFile, $clientsData);
 
     // Save individual client data
-    $userDir = __DIR__ . '/../../compra/area_clients/' . $client->getUsername();
+    $userDir = __DIR__ . '/../../compra/area_clients/' . $client->obtenerNombreUsuario();
     if (!is_dir($userDir)) {
         mkdir($userDir, 0777, true);
     }
@@ -139,37 +137,37 @@ if (isset($_GET['edit'])) {
             <h2><?php echo $editClient ? 'Editar Client' : 'Afegir Nou Client'; ?></h2>
             <form method="post">
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($editClient['id'] ?? ''); ?>">
-                <input type="hidden" name="existing_hash" value="<?php echo htmlspecialchars($editClient['password'] ?? ''); ?>">
+                <input type="hidden" name="existing_hash" value="<?php echo htmlspecialchars($editClient['contrasena'] ?? $editClient['password'] ?? ''); ?>">
                 <input type="hidden" name="created_at" value="<?php echo htmlspecialchars($editClient['created_at'] ?? ''); ?>">
                 
                 <div class="form-group">
                     <label>Nom d'usuari:</label>
-                    <input type="text" name="username" value="<?php echo htmlspecialchars($editClient['username'] ?? ''); ?>" required>
+                    <input type="text" name="nombreUsuario" value="<?php echo htmlspecialchars($editClient['nombreUsuario'] ?? $editClient['username'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Contrasenya <?php echo $editClient ? '(deixar buit per no canviar)' : ''; ?>:</label>
-                    <input type="password" name="password" <?php echo $editClient ? '' : 'required'; ?>>
+                    <input type="password" name="contrasena" <?php echo $editClient ? '' : 'required'; ?>>
                 </div>
                 
                 <div class="form-group">
                     <label>Nom complet:</label>
-                    <input type="text" name="fullname" value="<?php echo htmlspecialchars($editClient['name'] ?? ''); ?>" required>
+                    <input type="text" name="nombre" value="<?php echo htmlspecialchars($editClient['nombre'] ?? $editClient['name'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Email:</label>
-                    <input type="email" name="email" value="<?php echo htmlspecialchars($editClient['email'] ?? ''); ?>" required>
+                    <input type="email" name="correo" value="<?php echo htmlspecialchars($editClient['correo'] ?? $editClient['email'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Telèfon:</label>
-                    <input type="text" name="phone" value="<?php echo htmlspecialchars($editClient['phone'] ?? ''); ?>">
+                    <input type="text" name="telefono" value="<?php echo htmlspecialchars($editClient['telefono'] ?? $editClient['phone'] ?? ''); ?>">
                 </div>
                 
                 <div class="form-group">
                     <label>Adreça:</label>
-                    <input type="text" name="address" value="<?php echo htmlspecialchars($editClient['address'] ?? ''); ?>">
+                    <input type="text" name="direccion" value="<?php echo htmlspecialchars($editClient['direccion'] ?? $editClient['address'] ?? ''); ?>">
                 </div>
                 
                 <div class="form-group">
@@ -204,10 +202,10 @@ if (isset($_GET['edit'])) {
                 <?php foreach($clientsData as $c): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($c['id'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['username'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['name'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['email'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['phone'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['nombreUsuario'] ?? $c['username'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['nombre'] ?? $c['name'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['correo'] ?? $c['email'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['telefono'] ?? $c['phone'] ?? ''); ?></td>
                     <td>
                         <a href="?edit=<?php echo urlencode($c['id'] ?? ''); ?>" class="btn btn-primary">Editar</a>
                         <form method="post" style="display:inline;" onsubmit="return confirm('Segur que vols eliminar aquest client?');">
