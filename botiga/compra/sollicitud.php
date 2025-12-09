@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = "Tipus: $type\n\nMissatge:\n$comments";
     
     // Send to admin/worker email (mock)
-    if (Mailer::send('admin@botiga.local', $subject, $body)) {
+    if (Mailer::send('nachocastellocastillo@gmail.com', $subject, $body)) {
         $message = "Sol·licitud enviada correctament.";
     } else {
         $message = "Error en enviar la sol·licitud.";
