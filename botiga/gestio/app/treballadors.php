@@ -1,66 +1,65 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../classes/FileManager.php';
+require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Treballador.php';
-require_once __DIR__ . '/../../classes/Admin.php';
 
 // Check role: admin only
-if (empty($_SESSION['user']) || $_SESSION['role'] !== 'admin') {
-    header('Location: login.php');
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'admin') {
+    header('Location: inici_sessio.php');
     exit;
 }
 
-$workersFile = __DIR__ . '/../treballadors/treballadors.json';
-$workersData = FileManager::readJson($workersFile);
+$fitxerTreballadors = __DIR__ . '/../treballadors/treballadors.json';
+$dadesTreballadors = GestorFitxers::llegirTot($fitxerTreballadors);
 
 // Handle delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
-    $deleteUser = $_POST['delete_username'];
+    $usuariEsborrar = $_POST['usuari_esborrar'];
     // Prevent deleting self
-    if ($deleteUser === $_SESSION['user']) {
+    if ($usuariEsborrar === $_SESSION['usuari']) {
         echo "<script>alert('No pots esborrar-te a tu mateix!'); window.location.href='treballadors.php';</script>";
         exit;
     }
 
-    $workersData = array_filter($workersData, function($w) use ($deleteUser) {
-        return $w['username'] !== $deleteUser;
+    $dadesTreballadors = array_filter($dadesTreballadors, function($w) use ($usuariEsborrar) {
+        return ($w['usuari'] ?? '') !== $usuariEsborrar;
     });
-    $workersData = array_values($workersData);
-    FileManager::saveJson($workersFile, $workersData);
+    $dadesTreballadors = array_values($dadesTreballadors);
+    GestorFitxers::guardarTot($fitxerTreballadors, $dadesTreballadors);
     header('Location: treballadors.php');
     exit;
 }
 
 // Handle add/edit
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    $username = $_POST['username'];
+    $usuari = $_POST['usuari'];
     $isEdit = isset($_POST['is_edit']) && $_POST['is_edit'] == '1';
 
     // Password handling
-    $passwordHash = $_POST['existing_hash'] ?? '';
-    if (!empty($_POST['password'])) {
-        $passwordHash = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $passHash = $_POST['hash_existent'] ?? '';
+    if (!empty($_POST['contrasenya'])) {
+        $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
     }
 
     // Role
-    $role = $_POST['role'];
-    $worker = null;
-    if ($role === 'admin') {
-        $worker = new Admin($username, $passwordHash, $_POST['email'], $_POST['name']);
-    } else {
-        $worker = new Treballador($username, $passwordHash, $_POST['email'], $_POST['name']);
-    }
+    $rol = $_POST['rol'];
+    
+    // Treballador constructor: $usuari, $contrasenya, $nom, $email, $rol
+    $treballador = new Treballador($usuari, $passHash, $_POST['nom'], $_POST['email'], $rol);
 
-    $workerArray = $worker->toArray();
-    // Ensure role is saved (User toArray includes role)
+    $arrayTreballador = $treballador->obtenirDades();
 
     // Update list
-    $found = false;
-    foreach ($workersData as $key => $w) {
-        if ($w['username'] === $username) {
+    $trobat = false;
+    foreach ($dadesTreballadors as $key => $w) {
+        if (($w['usuari'] ?? '') === $usuari) {
             if ($isEdit) {
-                $workersData[$key] = $workerArray;
-                $found = true;
+                // Preserve ID if exists (not critical for logic but good practice)
+                $arrayTreballador['id'] = $w['id'] ?? $arrayTreballador['id'] ?? null;
+                $arrayTreballador['created_at'] = $w['created_at'] ?? date('c');
+                
+                $dadesTreballadors[$key] = $arrayTreballador;
+                $trobat = true;
             } else {
                 echo "<script>alert('L\'usuari ja existeix!'); window.location.href='treballadors.php';</script>";
                 exit;
@@ -68,21 +67,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
             break;
         }
     }
-    if (!$found && !$isEdit) {
-        $workersData[] = $workerArray;
+    if (!$trobat && !$isEdit) {
+        $arrayTreballador['created_at'] = date('c');
+        $dadesTreballadors[] = $arrayTreballador;
     }
 
-    FileManager::saveJson($workersFile, $workersData);
+    GestorFitxers::guardarTot($fitxerTreballadors, $dadesTreballadors);
     header('Location: treballadors.php');
     exit;
 }
 
 // Get worker for editing
-$editWorker = null;
+$editTreballador = null;
 if (isset($_GET['edit'])) {
-    foreach ($workersData as $w) {
-        if ($w['username'] === $_GET['edit']) {
-            $editWorker = $w;
+    foreach ($dadesTreballadors as $w) {
+        if (($w['usuari'] ?? '') === $_GET['edit']) {
+            $editTreballador = $w;
             break;
         }
     }
@@ -100,41 +100,41 @@ if (isset($_GET['edit'])) {
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Gestió de Treballadors</h1>
-            <a href="dashboard.php" class="btn btn-secondary">← Tornar al Dashboard</a>
+            <a href="taulell.php" class="btn btn-secondary">← Tornar al Taulell</a>
         </div>
         
-        <?php if ($editWorker || isset($_GET['add'])): ?>
+        <?php if ($editTreballador || isset($_GET['add'])): ?>
         <div class="form-container">
-            <h2><?php echo $editWorker ? 'Editar Treballador' : 'Afegir Nou Treballador'; ?></h2>
+            <h2><?php echo $editTreballador ? 'Editar Treballador' : 'Afegir Nou Treballador'; ?></h2>
             <form method="post">
-                <input type="hidden" name="is_edit" value="<?php echo $editWorker ? '1' : '0'; ?>">
-                <input type="hidden" name="existing_hash" value="<?php echo htmlspecialchars($editWorker['password'] ?? ''); ?>">
+                <input type="hidden" name="is_edit" value="<?php echo $editTreballador ? '1' : '0'; ?>">
+                <input type="hidden" name="hash_existent" value="<?php echo htmlspecialchars($editTreballador['contrasenya'] ?? $editTreballador['password'] ?? ''); ?>">
                 
                 <div class="form-group">
                     <label>Nom d'usuari:</label>
-                    <input type="text" name="username" value="<?php echo htmlspecialchars($editWorker['username'] ?? ''); ?>" <?php echo $editWorker ? 'readonly' : 'required'; ?>>
+                    <input type="text" name="usuari" value="<?php echo htmlspecialchars($editTreballador['usuari'] ?? $editTreballador['username'] ?? ''); ?>" <?php echo $editTreballador ? 'readonly' : 'required'; ?>>
                 </div>
                 
                 <div class="form-group">
-                    <label>Contrasenya <?php echo $editWorker ? '(deixar buit per no canviar)' : ''; ?>:</label>
-                    <input type="password" name="password" <?php echo $editWorker ? '' : 'required'; ?>>
+                    <label>Contrasenya <?php echo $editTreballador ? '(deixar buit per no canviar)' : ''; ?>:</label>
+                    <input type="password" name="contrasenya" <?php echo $editTreballador ? '' : 'required'; ?>>
                 </div>
                 
                 <div class="form-group">
                     <label>Nom complet:</label>
-                    <input type="text" name="name" value="<?php echo htmlspecialchars($editWorker['name'] ?? ''); ?>" required>
+                    <input type="text" name="nom" value="<?php echo htmlspecialchars($editTreballador['nom'] ?? $editTreballador['name'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Email:</label>
-                    <input type="email" name="email" value="<?php echo htmlspecialchars($editWorker['email'] ?? ''); ?>" required>
+                    <input type="email" name="email" value="<?php echo htmlspecialchars($editTreballador['email'] ?? $editTreballador['email'] ?? ''); ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label>Rol:</label>
-                    <select name="role">
-                        <option value="treballador" <?php echo ($editWorker && $editWorker['role'] === 'treballador') ? 'selected' : ''; ?>>Treballador</option>
-                        <option value="admin" <?php echo ($editWorker && $editWorker['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
+                    <select name="rol">
+                        <option value="treballador" <?php echo ($editTreballador && ($editTreballador['rol'] ?? '') === 'treballador') ? 'selected' : ''; ?>>Treballador</option>
+                        <option value="admin" <?php echo ($editTreballador && ($editTreballador['rol'] ?? '') === 'admin') ? 'selected' : ''; ?>>Admin</option>
                     </select>
                 </div>
                 
@@ -156,18 +156,18 @@ if (isset($_GET['edit'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($workersData as $w): ?>
+                <?php foreach($dadesTreballadors as $w): ?>
                 <tr>
-                    <td><?php echo htmlspecialchars($w['username'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($w['name'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($w['usuari'] ?? $w['username'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($w['nom'] ?? $w['name'] ?? ''); ?></td>
                     <td><?php echo htmlspecialchars($w['email'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($w['role'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($w['rol'] ?? $w['role'] ?? ''); ?></td>
                     <td>
-                        <a href="?edit=<?php echo urlencode($w['username'] ?? ''); ?>" class="btn btn-primary">Editar</a>
-                        <?php if(($w['username'] ?? '') !== $_SESSION['user']): ?>
+                        <a href="?edit=<?php echo urlencode($w['usuari'] ?? $w['username'] ?? ''); ?>" class="btn btn-primary">Editar</a>
+                        <?php if(($w['usuari'] ?? $w['username'] ?? '') !== $_SESSION['usuari']): ?>
                         <form method="post" style="display:inline;" onsubmit="return confirm('Segur que vols eliminar aquest treballador?');">
                             <input type="hidden" name="_method" value="DELETE">
-                            <input type="hidden" name="delete_username" value="<?php echo htmlspecialchars($w['username'] ?? ''); ?>">
+                            <input type="hidden" name="usuari_esborrar" value="<?php echo htmlspecialchars($w['usuari'] ?? $w['username'] ?? ''); ?>">
                             <button type="submit" class="btn btn-danger">Eliminar</button>
                         </form>
                         <?php endif; ?>

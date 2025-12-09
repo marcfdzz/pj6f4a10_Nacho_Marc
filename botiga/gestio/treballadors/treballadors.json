@@ -1,24 +1,24 @@
 [
   {
     "id": "1001",
-    "username": "admin",
-    "password": "$2y$10$n00DSTzEnlghPjBpEL92Mel0bo6UJccIpGqhIJpUhjpzby0S86niy",
-    "name": "Admin Botiga",
-    "email": "admin@example.local",
-    "phone": "600000000",
-    "address": "C/ Admin 1",
-    "role": "admin",
-    "created_at": "2025-12-01T00:00:00"
+    "usuari": "admin",
+    "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
+    "nom": "Admin Botiga",
+    "email": "admin@test.local",
+    "telefon": "600000000",
+    "adreca": "C/ Admin 1",
+    "rol": "admin",
+    "created_at": "2025-12-09T12:00:00"
   },
   {
     "id": "1002",
-    "username": "worker",
-    "password": "$2y$10$n00DSTzEnlghPjBpEL92Mel0bo6UJccIpGqhIJpUhjpzby0S86niy",
-    "name": "Worker Botiga",
-    "email": "worker@example.local",
-    "phone": "600000001",
-    "address": "C/ Worker 2",
-    "role": "treballador",
-    "created_at": "2025-12-01T00:00:00"
+    "usuari": "treballador",
+    "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
+    "nom": "Treballador Botiga",
+    "email": "treballador@test.local",
+    "telefon": "600000001",
+    "adreca": "C/ Treballador 2",
+    "rol": "treballador",
+    "created_at": "2025-12-09T12:00:00"
   }
 ]

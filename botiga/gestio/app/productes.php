@@ -1,25 +1,26 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../classes/FileManager.php';
+require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Producte.php';
 
-// Check role: admin or treballador
-if (empty($_SESSION['user']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'treballador')) {
-    header('Location: login.php');
+// Check role
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
+    header('Location: inici_sessio.php');
     exit;
 }
 
-$productsFile = __DIR__ . '/../productes/productes.json';
-$productsData = FileManager::readJson($productsFile);
+$fitxerProductes = __DIR__ . '/../productes/productes.json';
+$dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
 // Handle delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
-    $productsData = array_filter($productsData, function($p) use ($deleteId) {
+    $dadesProductes = array_filter($dadesProductes, function($p) use ($deleteId) {
         return ($p['id'] ?? '') !== $deleteId;
     });
-    $productsData = array_values($productsData);
-    FileManager::saveJson($productsFile, $productsData);
+    $dadesProductes = array_values($dadesProductes);
+    GestorFitxers::guardarTot($fitxerProductes, $dadesProductes);
+    GestorFitxers::guardarTot(__DIR__ . '/../../productes_copia/productes.json', $dadesProductes);
     header('Location: productes.php');
     exit;
 }
@@ -31,14 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     // Determine ID
     if (!$id) {
         $maxId = 0;
-        foreach ($productsData as $p) {
+        foreach ($dadesProductes as $p) {
             if (intval($p['id'] ?? 0) > $maxId) $maxId = intval($p['id']);
         }
         $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    // Instantiate Producte object
-    $product = new Producte(
+    // Instantiate Producte
+    $producte = new Producte(
         $id,
         $_POST['nom'],
         $_POST['descripcio'],
@@ -46,27 +47,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $_POST['imatge'] ?? ''
     );
 
-    $productArray = $product->toArray();
-    $productArray['updated_at'] = date('c');
+    $arrayProducte = $producte->obtenirDades();
+    $arrayProducte['updated_at'] = date('c');
 
     // Update list
-    $found = false;
-    foreach ($productsData as $key => $p) {
+    $trobat = false;
+    foreach ($dadesProductes as $key => $p) {
         if (($p['id'] ?? '') === $id) {
-            $productsData[$key] = $productArray;
-            $found = true;
+            $dadesProductes[$key] = $arrayProducte;
+            $trobat = true;
             break;
         }
     }
-    if (!$found) {
-        $productArray['created_at'] = date('c');
-        $productsData[] = $productArray;
+    if (!$trobat) {
+        $arrayProducte['created_at'] = date('c');
+        $dadesProductes[] = $arrayProducte;
     }
 
-    FileManager::saveJson($productsFile, $productsData);
-    
-
-    FileManager::saveJson(__DIR__ . '/../../productes_copia/productes.json', $productsData);
+    GestorFitxers::guardarTot($fitxerProductes, $dadesProductes);
+    GestorFitxers::guardarTot(__DIR__ . '/../../productes_copia/productes.json', $dadesProductes);
 
     header('Location: productes.php');
     exit;
@@ -75,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 // Get product for editing
 $editProduct = null;
 if (isset($_GET['edit'])) {
-    foreach ($productsData as $p) {
+    foreach ($dadesProductes as $p) {
         if (($p['id'] ?? '') === $_GET['edit']) {
             $editProduct = $p;
             break;
@@ -95,7 +94,7 @@ if (isset($_GET['edit'])) {
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Gestió de Productes</h1>
-            <a href="dashboard.php" class="btn btn-secondary">← Tornar al Dashboard</a>
+            <a href="taulell.php" class="btn btn-secondary">← Tornar al Taulell</a>
         </div>
         
         <?php if ($editProduct || isset($_GET['add'])): ?>
@@ -145,7 +144,7 @@ if (isset($_GET['edit'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($productsData as $p): ?>
+                <?php foreach($dadesProductes as $p): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($p['id'] ?? ''); ?></td>
                     <td><?php echo htmlspecialchars($p['nom'] ?? ''); ?></td>

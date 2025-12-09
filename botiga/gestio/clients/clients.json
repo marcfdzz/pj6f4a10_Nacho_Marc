@@ -1,15 +1,13 @@
 [
     {
         "id": "0001",
-        "username": "cliente1",
-        "password": "$2y$10$n00DSTzEnlghPjBpEL92Mel0bo6UJccIpGqhIJpUhjpzby0S86niy",
-        "name": "Cliente Uno",
-        "email": "cliente1@example.local",
-        "phone": "600111222",
-        "address": "C/ Falsa 123",
-        "card_encrypted": "ENC(4111111111111111)",
-        "card_exp": "12/26",
-        "role": "client",
-        "created_at": "2025-12-01T00:00:00"
+        "usuari": "client",
+        "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
+        "nom": "Client de Prova",
+        "email": "client@test.local",
+        "telefon": "600111222",
+        "adreca": "C/ De la Prova 123",
+        "rol": "client",
+        "created_at": "2025-12-09T12:00:00"
     }
 ]

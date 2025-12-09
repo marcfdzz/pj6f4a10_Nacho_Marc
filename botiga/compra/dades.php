@@ -1,21 +1,28 @@
 <?php
 session_start();
-require_once __DIR__ . '/../classes/FileManager.php';
+require_once __DIR__ . '/../classes/GestorFitxers.php';
 
-if (empty($_SESSION['user']) || ($_SESSION['role'] ?? '') !== 'client') {
-    header('Location: login.php');
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'client') {
+    header('Location: inici_sessio.php');
     exit;
 }
 
-$user = $_SESSION['user'];
-$dataFile = __DIR__ . '/area_clients/' . $user . '/dades';
+$usuariActual = $_SESSION['usuari'];
+$fitxerClients = __DIR__ . '/../gestio/clients/clients.json';
+$dadesClients = GestorFitxers::llegirTot($fitxerClients);
 
-if (!file_exists($dataFile)) {
+$dadesUsuari = null;
+foreach ($dadesClients as $c) {
+    if (($c['usuari'] ?? '') === $usuariActual) {
+        $dadesUsuari = $c;
+        break;
+    }
+}
+
+if (!$dadesUsuari) {
     echo "No s'han trobat les dades.";
     exit;
 }
-
-$userData = FileManager::readJson($dataFile);
 ?>
 <!DOCTYPE html>
 <html lang="ca">
@@ -28,28 +35,28 @@ $userData = FileManager::readJson($dataFile);
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Dades del Client</h1>
-            <a href="dashboard.php" class="btn btn-secondary no-print">← Tornar al Dashboard</a>
+            <a href="taulell.php" class="btn btn-secondary no-print">← Tornar al Taulell</a>
         </div>
         
         <div class="field" style="margin-top: 20px;">
             <span class="label">Usuari:</span>
-            <span class="value"><?php echo htmlspecialchars($userData['username'] ?? ''); ?></span>
+            <span class="value"><?php echo htmlspecialchars($dadesUsuari['usuari'] ?? ''); ?></span>
         </div>
         <div class="field">
             <span class="label">Nom Complet:</span>
-            <span class="value"><?php echo htmlspecialchars($userData['name'] ?? ''); ?></span>
+            <span class="value"><?php echo htmlspecialchars($dadesUsuari['nom'] ?? ''); ?></span>
         </div>
         <div class="field">
             <span class="label">Email:</span>
-            <span class="value"><?php echo htmlspecialchars($userData['email'] ?? ''); ?></span>
+            <span class="value"><?php echo htmlspecialchars($dadesUsuari['email'] ?? ''); ?></span>
         </div>
         <div class="field">
             <span class="label">Telèfon:</span>
-            <span class="value"><?php echo htmlspecialchars($userData['phone'] ?? ''); ?></span>
+            <span class="value"><?php echo htmlspecialchars($dadesUsuari['telefon'] ?? ''); ?></span>
         </div>
         <div class="field">
             <span class="label">Adreça:</span>
-            <span class="value"><?php echo htmlspecialchars($userData['address'] ?? ''); ?></span>
+            <span class="value"><?php echo htmlspecialchars($dadesUsuari['adreca'] ?? ''); ?></span>
         </div>
         
         <div class="no-print mt-20">

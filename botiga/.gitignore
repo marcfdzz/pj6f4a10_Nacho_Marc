@@ -1,5 +1,6 @@
 config/.env
 logs/
-compra/area_clients/
+compra/area_clients/*
+!compra/area_clients/.htaccess
 data/
 *.zip

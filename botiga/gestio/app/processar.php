@@ -1,8 +1,8 @@
 <?php
 session_start();
 // Check role: admin or treballador
-if (empty($_SESSION['user']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'treballador')) {
-    header('Location: login.php');
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
+    header('Location: inici_sessio.php');
     exit;
 }
 

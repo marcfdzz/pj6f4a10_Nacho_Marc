@@ -1,14 +1,14 @@
 <?php
 session_start();
-require_once __DIR__ . '/../classes/FileManager.php';
+require_once __DIR__ . '/../classes/GestorFitxers.php';
 
-if (empty($_SESSION['user']) || ($_SESSION['role'] ?? '') !== 'client') {
-    header('Location: login.php');
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'client') {
+    header('Location: inici_sessio.php');
     exit;
 }
 
-$productsFile = __DIR__ . '/../gestio/productes/productes.json';
-$products = FileManager::readJson($productsFile);
+$rutaProductes = __DIR__ . '/../productes_copia/productes.json';
+$llistaProductes = GestorFitxers::llegirTot($rutaProductes);
 
 ?>
 <!DOCTYPE html>
@@ -23,16 +23,16 @@ $products = FileManager::readJson($productsFile);
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Productes</h1>
-            <a href='dashboard.php' class="btn btn-secondary">← Tornar al Dashboard</a>
+            <a href='taulell.php' class="btn btn-secondary">← Tornar al Taulell</a>
         </div>
         
         <div class="nav-links">
-            <a href='cart.php'>Veure Cistella</a>
+            <a href='cistella.php'>Veure Cistella</a>
         </div>
 
-        <form method='post' action='cart.php'>
+        <form method='post' action='cistella.php'>
             <div class="product-grid">
-                <?php foreach($products as $p): ?>
+                <?php foreach($llistaProductes as $p): ?>
                 <div class="product-card">
                     <div>
                         <h3><?php echo htmlspecialchars($p['nom'] ?? ''); ?></h3>

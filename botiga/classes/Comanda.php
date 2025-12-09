@@ -1,5 +1,7 @@
 <?php
-class Comanda {
+require_once 'IGuardable.php';
+
+class Comanda implements IGuardable {
     public $id;
     public $data;
     public $client;
@@ -14,7 +16,7 @@ class Comanda {
         $this->total = $total;
     }
 
-    public function toArray() {
+    public function obtenirDades() {
         return [
             'id' => $this->id,
             'data' => $this->data,

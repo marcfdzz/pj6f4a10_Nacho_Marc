@@ -1,31 +1,32 @@
 <?php
-require_once 'User.php';
+require_once 'Persona.php';
 
-class Client extends User {
-    private $direccion;
-    private $telefono;
+class Client extends Persona {
+    private $adreca;
+    private $telefon;
     private $id;
 
-    public function __construct($nombreUsuario, $contrasena, $correo, $nombre, $direccion, $telefono, $id = null) {
-        parent::__construct($nombreUsuario, $contrasena, 'client', $correo, $nombre);
-        $this->direccion = $direccion;
-        $this->telefono = $telefono;
+    public function __construct($usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id = null) {
+        // Llamamos al constructor del padre (Persona)
+        parent::__construct($usuari, $contrasenya, 'client', $nom, $email);
+        $this->adreca = $adreca;
+        $this->telefon = $telefon;
         $this->id = $id;
     }
 
-    public function obtenerDireccion() { return $this->direccion; }
-    public function obtenerTelefono() { return $this->telefono; }
-    public function obtenerId() { return $this->id; }
+    public function obtenirAdreca() { return $this->adreca; }
+    public function obtenirTelefon() { return $this->telefon; }
+    public function obtenirId() { return $this->id; }
 
-    public function establecerDireccion($direccion) { $this->direccion = $direccion; }
-    public function establecerTelefono($telefono) { $this->telefono = $telefono; }
-
-    public function toArray() {
-        $data = parent::toArray();
-        $data['direccion'] = $this->direccion;
-        $data['telefono'] = $this->telefono;
-        $data['id'] = $this->id;
-        return $data;
+    // Sobreescribimos para añadir datos extra
+    public function obtenirDades() {
+        $dades = parent::obtenirDades();
+        $dades['adreca'] = $this->adreca;
+        $dades['telefon'] = $this->telefon;
+        $dades['id'] = $this->id;
+        // Importante: password solo si es necesario guardar, pero aqui lo simulamos
+        $dades['contrasenya'] = $this->contrasenya; 
+        return $dades;
     }
 }
 ?>

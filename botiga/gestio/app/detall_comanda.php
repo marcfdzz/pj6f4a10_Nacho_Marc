@@ -1,30 +1,30 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../classes/FileManager.php';
+require_once __DIR__ . '/../../classes/GestorFitxers.php';
 
-// Check role: admin or treballador
-if (empty($_SESSION['user']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'treballador')) {
-    header('Location: login.php');
+// Check role
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
+    header('Location: inici_sessio.php');
     exit;
 }
 
-$file = $_GET['file'] ?? '';
-$pendingDir = __DIR__ . '/../../comandes_copia';
-$filePath = $pendingDir . '/' . $file;
+$fitxer = $_GET['file'] ?? '';
+$dirPendents = __DIR__ . '/../../comandes_copia';
+$rutaFitxer = $dirPendents . '/' . $fitxer;
 
-if (!$file || !file_exists($filePath)) {
+if (!$fitxer || !file_exists($rutaFitxer)) {
     echo "Comanda no trobada.";
     exit;
 }
 
-$order = FileManager::readJson($filePath);
+$comanda = GestorFitxers::llegirTot($rutaFitxer);
 
 // Get products for names
-$productsFile = __DIR__ . '/../productes/productes.json';
-$productsData = FileManager::readJson($productsFile);
+$fitxerProductes = __DIR__ . '/../productes/productes.json';
+$dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
-function getProductName($pid, $productsData) {
-    foreach ($productsData as $p) {
+function obtenirNomProducte($pid, $dadesProductes) {
+    foreach ($dadesProductes as $p) {
         if (($p['id'] ?? '') == $pid) return $p['nom'] ?? 'Desconegut';
     }
     return 'Desconegut';
@@ -40,11 +40,11 @@ function getProductName($pid, $productsData) {
 <body>
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>Detall Comanda: <?php echo htmlspecialchars($order['id'] ?? ''); ?></h1>
+            <h1>Detall Comanda: <?php echo htmlspecialchars($comanda['id'] ?? ''); ?></h1>
             <a href="comandes.php" class="btn btn-secondary no-print">← Tornar</a>
         </div>
-        <p><strong>Client:</strong> <?php echo htmlspecialchars($order['client'] ?? ''); ?></p>
-        <p><strong>Data:</strong> <?php echo htmlspecialchars($order['data'] ?? ''); ?></p>
+        <p><strong>Client:</strong> <?php echo htmlspecialchars($comanda['usuari'] ?? $comanda['client'] ?? ''); ?></p>
+        <p><strong>Data:</strong> <?php echo htmlspecialchars($comanda['data'] ?? ''); ?></p>
         
         <table>
             <thead>
@@ -54,20 +54,20 @@ function getProductName($pid, $productsData) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($order['productes'] ?? [] as $pid => $qty): ?>
+                <?php foreach ($comanda['productes'] ?? [] as $pid => $qty): ?>
                 <tr>
-                    <td><?php echo htmlspecialchars(getProductName($pid, $productsData)); ?></td>
+                    <td><?php echo htmlspecialchars(obtenirNomProducte($pid, $dadesProductes)); ?></td>
                     <td><?php echo htmlspecialchars($qty); ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
         
-        <p><strong>Total:</strong> <?php echo number_format($order['total'] ?? 0, 2); ?> €</p>
+        <p><strong>Total:</strong> <?php echo number_format($comanda['total'] ?? 0, 2); ?> €</p>
         
         <div class="mt-20 no-print">
-            <form action="process.php" method="post" style="display:inline;">
-                <input type="hidden" name="file" value="<?php echo htmlspecialchars($file); ?>">
+            <form action="processar.php" method="post" style="display:inline;">
+                <input type="hidden" name="file" value="<?php echo htmlspecialchars($fitxer); ?>">
                 <button type="submit" name="process" class="btn btn-success">Processar i Moure</button>
                 <button type="submit" name="email" class="btn btn-info">Enviar Correu</button>
             </form>

@@ -1,41 +1,41 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../classes/FileManager.php';
+require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Client.php';
 
-// Check role: admin or treballador
-if (empty($_SESSION['usuario']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
-    header('Location: login.php');
+// Check role
+if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
+    header('Location: inici_sessio.php');
     exit;
 }
 
-$clientsFile = __DIR__ . '/../clients/clients.json';
-$clientsData = FileManager::readJson($clientsFile);
+$fitxerClients = __DIR__ . '/../clients/clients.json';
+$dadesClients = GestorFitxers::llegirTot($fitxerClients);
 
 // Handle delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
     
     // Find client to get username for folder deletion
-    $usernameToDelete = null;
-    foreach ($clientsData as $c) {
+    $usuariEsborrar = null;
+    foreach ($dadesClients as $c) {
         if (($c['id'] ?? '') === $deleteId) {
-            $usernameToDelete = $c['nombreUsuario'] ?? $c['username'] ?? null;
+            $usuariEsborrar = $c['usuari'] ?? $c['nombreUsuario'] ?? $c['username'] ?? null;
             break;
         }
     }
 
-    $clientsData = array_filter($clientsData, function($c) use ($deleteId) {
+    $dadesClients = array_filter($dadesClients, function($c) use ($deleteId) {
         return ($c['id'] ?? '') !== $deleteId;
     });
-    $clientsData = array_values($clientsData);
-    FileManager::saveJson($clientsFile, $clientsData);
+    $dadesClients = array_values($dadesClients);
+    GestorFitxers::guardarTot($fitxerClients, $dadesClients);
 
-    // Optional: Remove individual folder if it exists
-    if ($usernameToDelete) {
-        $userDir = __DIR__ . '/../../compra/area_clients/' . $usernameToDelete;
-        if (file_exists($userDir . '/dades')) {
-            unlink($userDir . '/dades');
+    // Remove individual folder
+    if ($usuariEsborrar) {
+        $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $usuariEsborrar;
+        if (file_exists($dirUsuari . '/dades')) {
+            unlink($dirUsuari . '/dades');
         }
     }
 
@@ -50,57 +50,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     // Determine ID
     if (!$id) {
         $maxId = 0;
-        foreach ($clientsData as $c) {
+        foreach ($dadesClients as $c) {
             if (intval($c['id'] ?? 0) > $maxId) $maxId = intval($c['id']);
         }
         $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
     }
 
     // Password handling
-    $passwordHash = $_POST['existing_hash'] ?? '';
-    if (!empty($_POST['contrasena'])) {
-        $passwordHash = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
+    $passHash = $_POST['hash_existent'] ?? '';
+    if (!empty($_POST['contrasenya'])) {
+        $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
     }
 
-    // Instantiate Client object
+    // Instantiate Client object ($usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id)
     $client = new Client(
-        $_POST['nombreUsuario'],
-        $passwordHash,
-        $_POST['correo'],
-        $_POST['nombre'],
-        $_POST['direccion'],
-        $_POST['telefono'],
+        $_POST['usuari'],
+        $passHash,
+        $_POST['nom'],
+        $_POST['email'],
+        $_POST['adreca'],
+        $_POST['telefon'],
         $id
     );
 
-    // Additional fields not in constructor but in array
-    $clientArray = $client->toArray();
-    $clientArray['card_encrypted'] = $_POST['card_encrypted'] ?? '';
-    $clientArray['card_exp'] = $_POST['card_exp'] ?? '';
-    $clientArray['created_at'] = $_POST['created_at'] ?? date('c');
+    // Get array and add extra fields
+    $arrayClient = $client->obtenirDades();
+    $arrayClient['card_encrypted'] = $_POST['card_encrypted'] ?? '';
+    $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
+    $arrayClient['created_at'] = $_POST['created_at'] ?? date('c');
 
     // Update list
-    $found = false;
-    foreach ($clientsData as $key => $c) {
+    $trobat = false;
+    foreach ($dadesClients as $key => $c) {
         if (($c['id'] ?? '') === $id) {
-            $clientsData[$key] = $clientArray;
-            $found = true;
+            $dadesClients[$key] = $arrayClient;
+            $trobat = true;
             break;
         }
     }
-    if (!$found) {
-        $clientsData[] = $clientArray;
+    if (!$trobat) {
+        $dadesClients[] = $arrayClient;
     }
 
     // Save main list
-    FileManager::saveJson($clientsFile, $clientsData);
+    GestorFitxers::guardarTot($fitxerClients, $dadesClients);
 
     // Save individual client data
-    $userDir = __DIR__ . '/../../compra/area_clients/' . $client->obtenerNombreUsuario();
-    if (!is_dir($userDir)) {
-        mkdir($userDir, 0777, true);
+    $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $client->obtenirUsuari();
+    if (!is_dir($dirUsuari)) {
+        mkdir($dirUsuari, 0777, true);
     }
-    FileManager::saveJson($userDir . '/dades', $clientArray);
+    GestorFitxers::guardarTot($dirUsuari . '/dades', $arrayClient);
 
     header('Location: clients.php');
     exit;
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 // Get client for editing
 $editClient = null;
 if (isset($_GET['edit'])) {
-    foreach ($clientsData as $c) {
+    foreach ($dadesClients as $c) {
         if (($c['id'] ?? '') === $_GET['edit']) {
             $editClient = $c;
             break;
@@ -129,7 +129,7 @@ if (isset($_GET['edit'])) {
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Gestió de Clients</h1>
-            <a href="dashboard.php" class="btn btn-secondary">← Tornar al Dashboard</a>
+            <a href="taulell.php" class="btn btn-secondary">← Tornar al Taulell</a>
         </div>
         
         <?php if ($editClient || isset($_GET['add'])): ?>
@@ -137,37 +137,37 @@ if (isset($_GET['edit'])) {
             <h2><?php echo $editClient ? 'Editar Client' : 'Afegir Nou Client'; ?></h2>
             <form method="post">
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($editClient['id'] ?? ''); ?>">
-                <input type="hidden" name="existing_hash" value="<?php echo htmlspecialchars($editClient['contrasena'] ?? $editClient['password'] ?? ''); ?>">
+                <input type="hidden" name="hash_existent" value="<?php echo htmlspecialchars($editClient['contrasenya'] ?? $editClient['password'] ?? ''); ?>">
                 <input type="hidden" name="created_at" value="<?php echo htmlspecialchars($editClient['created_at'] ?? ''); ?>">
                 
                 <div class="form-group">
                     <label>Nom d'usuari:</label>
-                    <input type="text" name="nombreUsuario" value="<?php echo htmlspecialchars($editClient['nombreUsuario'] ?? $editClient['username'] ?? ''); ?>" required>
+                    <input type="text" name="usuari" value="<?php echo htmlspecialchars($editClient['usuari'] ?? $editClient['nombreUsuario'] ?? $editClient['username'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Contrasenya <?php echo $editClient ? '(deixar buit per no canviar)' : ''; ?>:</label>
-                    <input type="password" name="contrasena" <?php echo $editClient ? '' : 'required'; ?>>
+                    <input type="password" name="contrasenya" <?php echo $editClient ? '' : 'required'; ?>>
                 </div>
                 
                 <div class="form-group">
                     <label>Nom complet:</label>
-                    <input type="text" name="nombre" value="<?php echo htmlspecialchars($editClient['nombre'] ?? $editClient['name'] ?? ''); ?>" required>
+                    <input type="text" name="nom" value="<?php echo htmlspecialchars($editClient['nom'] ?? $editClient['nombre'] ?? $editClient['name'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Email:</label>
-                    <input type="email" name="correo" value="<?php echo htmlspecialchars($editClient['correo'] ?? $editClient['email'] ?? ''); ?>" required>
+                    <input type="email" name="email" value="<?php echo htmlspecialchars($editClient['email'] ?? $editClient['correo'] ?? ''); ?>" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Telèfon:</label>
-                    <input type="text" name="telefono" value="<?php echo htmlspecialchars($editClient['telefono'] ?? $editClient['phone'] ?? ''); ?>">
+                    <input type="text" name="telefon" value="<?php echo htmlspecialchars($editClient['telefon'] ?? $editClient['telefono'] ?? $editClient['phone'] ?? ''); ?>">
                 </div>
                 
                 <div class="form-group">
                     <label>Adreça:</label>
-                    <input type="text" name="direccion" value="<?php echo htmlspecialchars($editClient['direccion'] ?? $editClient['address'] ?? ''); ?>">
+                    <input type="text" name="adreca" value="<?php echo htmlspecialchars($editClient['adreca'] ?? $editClient['direccion'] ?? $editClient['address'] ?? ''); ?>">
                 </div>
                 
                 <div class="form-group">
@@ -199,13 +199,13 @@ if (isset($_GET['edit'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($clientsData as $c): ?>
+                <?php foreach($dadesClients as $c): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($c['id'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['nombreUsuario'] ?? $c['username'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['nombre'] ?? $c['name'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['correo'] ?? $c['email'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($c['telefono'] ?? $c['phone'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['usuari'] ?? $c['nombreUsuario'] ?? $c['username'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['nom'] ?? $c['nombre'] ?? $c['name'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['email'] ?? $c['correo'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($c['telefon'] ?? $c['telefono'] ?? $c['phone'] ?? ''); ?></td>
                     <td>
                         <a href="?edit=<?php echo urlencode($c['id'] ?? ''); ?>" class="btn btn-primary">Editar</a>
                         <form method="post" style="display:inline;" onsubmit="return confirm('Segur que vols eliminar aquest client?');">

@@ -1,6 +1,6 @@
 <?php
 session_start();
-if(empty($_SESSION['user'])){ header('Location: login.php'); exit; }
+if(empty($_SESSION['usuari'])){ header('Location: inici_sessio.php'); exit; }
 ?>
 <!DOCTYPE html>
 <html lang="ca">
@@ -12,13 +12,13 @@ if(empty($_SESSION['user'])){ header('Location: login.php'); exit; }
 </head>
 <body>
     <div class="container">
-        <h1>Benvingut, <?php echo htmlspecialchars($_SESSION['user']); ?></h1>
+        <h1>Benvingut, <?php echo htmlspecialchars($_SESSION['usuari']); ?></h1>
         <div class="nav-links">
             <a href='productes.php'>Productes</a>
-            <a href='cart.php'>La meva cistella</a>
+            <a href='cistella.php'>La meva cistella</a>
             <a href='dades.php'>Les meves dades</a>
             <a href='sollicitud.php'>Sol·licitar canvi dades</a>
-            <a href='logout.php' style="color: #dc3545;">Logout</a>
+            <a href='tancar_sessio.php' style="color: #dc3545;">Tancar Sessió</a>
         </div>
         <p>Selecciona una opció del menú per començar.</p>
     </div>
