@@ -1,24 +1,35 @@
 [
-  {
-    "id": "1001",
-    "usuari": "admin",
-    "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
-    "nom": "Admin Botiga",
-    "email": "admin@test.local",
-    "telefon": "600000000",
-    "adreca": "C/ Admin 1",
-    "rol": "admin",
-    "created_at": "2025-12-09T12:00:00"
-  },
-  {
-    "id": "1002",
-    "usuari": "treballador",
-    "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
-    "nom": "Treballador Botiga",
-    "email": "treballador@test.local",
-    "telefon": "600000001",
-    "adreca": "C/ Treballador 2",
-    "rol": "treballador",
-    "created_at": "2025-12-09T12:00:00"
-  }
+    {
+        "id": "1001",
+        "usuari": "admin",
+        "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
+        "nom": "Admin Botiga",
+        "email": "admin@test.local",
+        "telefon": "600000000",
+        "adreca": "C\/ Admin 1",
+        "rol": "admin",
+        "created_at": "2025-12-09T12:00:00"
+    },
+    {
+        "id": "1002",
+        "usuari": "treballador",
+        "contrasenya": "$2y$10$oMOW9tIv5msCooU593z9Y.9IKmOi4ySC.LvbVcRPkgd7nSVUkNl0O",
+        "nom": "Treballador Botiga",
+        "email": "treballador@test.local",
+        "telefon": "600000001",
+        "adreca": "C\/ Treballador 2",
+        "rol": "treballador",
+        "created_at": "2025-12-09T12:00:00"
+    },
+    {
+        "id": "9998",
+        "usuari": "testadmin",
+        "contrasenya": "$2y$10$q2YhgkMC8hdt6uWA8vF\/6OKfJ6aaagwp0V6ejs8V6uaO5W2yhMnba",
+        "nom": "Admin Test",
+        "email": "admin@test.com",
+        "telefon": "666777999",
+        "adreca": "Calle Admin 456",
+        "rol": "admin",
+        "created_at": "2025-12-10T16:10:11+01:00"
+    }
 ]

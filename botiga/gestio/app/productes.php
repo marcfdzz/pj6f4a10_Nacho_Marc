@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     });
     $dadesProductes = array_values($dadesProductes);
     GestorFitxers::guardarTot($fitxerProductes, $dadesProductes);
-    GestorFitxers::guardarTot(__DIR__ . '/../../productes_copia/productes.json', $dadesProductes);
+
     header('Location: productes.php');
     exit;
 }
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     }
 
     GestorFitxers::guardarTot($fitxerProductes, $dadesProductes);
-    GestorFitxers::guardarTot(__DIR__ . '/../../productes_copia/productes.json', $dadesProductes);
+
 
     header('Location: productes.php');
     exit;

@@ -29,7 +29,7 @@ if (empty($items)) {
 }
 
 // Calcular total
-$rutaProductes = __DIR__.'/../productes_copia/productes.json';
+$rutaProductes = __DIR__.'/../gestio/productes/productes.json';
 $dadesProductes = GestorFitxers::llegirTot($rutaProductes);
 
 $total = 0;

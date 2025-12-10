@@ -11,7 +11,7 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'client') {
 }
 
 $usuariActual = $_SESSION['usuari'];
-$fitxerProductes = __DIR__.'/../productes_copia/productes.json';
+$fitxerProductes = __DIR__.'/../gestio/productes/productes.json';
 $dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
 // Cart file

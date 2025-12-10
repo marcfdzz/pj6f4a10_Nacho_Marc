@@ -7,7 +7,7 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'client') {
     exit;
 }
 
-$rutaProductes = __DIR__ . '/../productes_copia/productes.json';
+$rutaProductes = __DIR__ . '/../gestio/productes/productes.json';
 $llistaProductes = GestorFitxers::llegirTot($rutaProductes);
 
 ?>
