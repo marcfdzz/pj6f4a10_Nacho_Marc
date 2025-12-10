@@ -1,8 +1,7 @@
 <?php
-require_once 'IGuardable.php';
 
 // Clase base simple
-class Persona implements IGuardable {
+class Persona {
     protected $usuari;
     protected $contrasenya;
     protected $rol;

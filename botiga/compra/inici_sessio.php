@@ -46,7 +46,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 <head>
     <meta charset="UTF-8">
     <title>Login Compra</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="login-container">

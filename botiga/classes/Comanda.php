@@ -1,7 +1,6 @@
 <?php
-require_once 'IGuardable.php';
 
-class Comanda implements IGuardable {
+class Comanda {
     public $id;
     public $data;
     public $client;

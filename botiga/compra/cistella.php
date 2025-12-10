@@ -55,8 +55,7 @@ $itemsCistella = $cistella->obtenirProductes();
 <head>
     <meta charset="UTF-8">
     <title>La meva cistella</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="container">

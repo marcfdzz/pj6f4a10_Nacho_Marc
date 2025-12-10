@@ -23,13 +23,13 @@ if(isset($_GET['acceptar_cookies'])){
         </div>
     </div>
 
-    <!-- CODE IRRISORIO COOKIES START -->
+    
     <?php if(!isset($_COOKIE['botiga_cookies'])): ?>
     <div style="position:fixed; bottom:0; padding:20px; background:red; color:white; width:100%; text-align:center;">
         <b>Atenció:</b> Utilitzem cookies. 
         <a href="?acceptar_cookies=1" style="background:white; color:red; padding:5px 10px; text-decoration:none; margin-left:10px; font-weight:bold;">D'ACORD</a>
     </div>
     <?php endif; ?>
-    <!-- CODE IRRISORIO COOKIES END -->
+    
 </body>
 </html>

@@ -1,5 +1,5 @@
 <?php
-require_once 'Persona.php';
+require_once __DIR__ . '/Persona.php';
 
 class Client extends Persona {
     private $adreca;

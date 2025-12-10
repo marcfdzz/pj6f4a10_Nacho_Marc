@@ -29,7 +29,7 @@ if (!$dadesUsuari) {
 <head>
     <meta charset="UTF-8">
     <title>Les meves dades</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="container">

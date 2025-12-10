@@ -35,7 +35,7 @@ function obtenirNomProducte($pid, $dadesProductes) {
 <head>
     <meta charset="UTF-8">
     <title>Detall Comanda</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container">

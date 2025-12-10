@@ -43,7 +43,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container" style="max-width: 400px;">

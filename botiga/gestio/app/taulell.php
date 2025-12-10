@@ -7,7 +7,7 @@ if(empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol
 <head>
     <meta charset="UTF-8">
     <title>Taulell Gestió</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container">
