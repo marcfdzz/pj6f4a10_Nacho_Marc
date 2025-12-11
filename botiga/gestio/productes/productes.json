@@ -1,19 +1,57 @@
 [
     {
         "id": "0001",
-        "nom": "Pollo frito",
-        "descripcio": "Es pollo y esta frito",
-        "preu": "19.99",
-        "imatge": "",
-        "updated_at": "2025-12-07T13:52:59+01:00",
-        "created_at": "2025-12-07T13:52:59+01:00"
+        "nom": "Camiseta Deportiva Nike Dri-FIT",
+        "descripcio": "Camiseta transpirable de tecnología Dri-FIT para máximo rendimiento. Ideal para running y entrenamientos intensos.",
+        "preu": "29.99",
+        "imatge": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
+        "updated_at": "2025-12-11T16:00:00+01:00",
+        "created_at": "2025-12-11T16:00:00+01:00"
     },
     {
         "id": "0002",
-        "nom": "Patatas fritas",
-        "descripcio": "Son patatas y estan fritas",
-        "preu": "5.99",
+        "nom": "Pantalones Deportivos Adidas",
+        "descripcio": "Pantalones cómodos y flexibles con tecnología ClimaLite. Perfectos para yoga, gimnasio y actividades al aire libre.",
+        "preu": "39.99",
+        "imatge": "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400",
+        "updated_at": "2025-12-11T16:00:00+01:00",
+        "created_at": "2025-12-11T16:00:00+01:00"
+    },
+    {
+        "id": "0003",
+        "nom": "Zapatillas Running Nike Air Max",
+        "descripcio": "Zapatillas de running con tecnología Air Max para máxima amortiguación. Diseñadas para corredores de todos los niveles.",
+        "preu": "89.99",
+        "imatge": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
+        "updated_at": "2025-12-11T16:00:00+01:00",
+        "created_at": "2025-12-11T16:00:00+01:00"
+    },
+    {
+        "id": "0004",
+        "nom": "Balón de Fútbol Adidas",
+        "descripcio": "Balón oficial de alta calidad con superficie texturizada para mejor control. Ideal para entrenamientos y partidos.",
+        "preu": "24.99",
         "imatge": "",
-        "updated_at": "2025-12-07T14:13:56+01:00"
+        "updated_at": "2025-12-11T16:00:00+01:00",
+        "created_at": "2025-12-11T16:00:00+01:00"
+    },
+    {
+        "id": "0005",
+        "nom": "Raqueta de Tenis Wilson",
+        "descripcio": "Raqueta profesional con marco de grafito. Perfecto equilibrio entre potencia y control para jugadores intermedios.",
+        "preu": "79.99",
+        "imatge": "",
+        "updated_at": "2025-12-11T16:00:00+01:00",
+        "created_at": "2025-12-11T16:00:00+01:00"
+    },
+    {
+        "id": "0006",
+        "nom": "Mochila Deportiva Under Armour",
+        "descripcio": "Mochila resistente con compartimentos para ropa, zapatillas y equipo. Ideal para gimnasio y deportes al aire libre.",
+        "preu": "44.99",
+        "imatge": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
+        "updated_at": "2025-12-11T16:00:00+01:00",
+        "created_at": "2025-12-11T16:00:00+01:00"
     }
 ]
+    

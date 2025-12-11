@@ -17,7 +17,7 @@ $llistaProductes = GestorFitxers::llegirTot($rutaProductes);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productes</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="container">
@@ -35,8 +35,11 @@ $llistaProductes = GestorFitxers::llegirTot($rutaProductes);
                 <?php foreach($llistaProductes as $p): ?>
                 <div class="product-card">
                     <div>
+                        <?php if (!empty($p['imatge'])): ?>
+                        <img src="<?php echo htmlspecialchars($p['imatge']); ?>" alt="<?php echo htmlspecialchars($p['nom'] ?? ''); ?>" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 10px;">
+                        <?php endif; ?>
                         <h3><?php echo htmlspecialchars($p['nom'] ?? ''); ?></h3>
-                        <div class="description"><?php echo htmlspecialchars($p['descripcio'] ?? ''); ?></div>
+                        <div class="description" style="display: block; font-size: 13px; color: #565959; margin-bottom: 10px; line-height: 1.4;"><?php echo htmlspecialchars($p['descripcio'] ?? ''); ?></div>
                         <div class="price"><?php echo htmlspecialchars($p['preu'] ?? ''); ?> €</div>
                     </div>
                     <div>
