@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cistella->afegir($pid, $qty);
             }
         }
-        // Guardar utilitzant interfície obtenirDades
+        // Guardar cistella
         GestorFitxers::guardarTot($fitxerCistella, $cistella->obtenirDades());
         echo "<script>alert('Productes afegits!'); window.location.href='cistella.php';</script>";
         exit;

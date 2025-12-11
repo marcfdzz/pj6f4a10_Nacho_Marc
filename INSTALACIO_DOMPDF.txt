@@ -1,0 +1,21 @@
+INSTRUCCIONS PER INSTAL·LAR DOMPDF
+====================================
+
+1. Obre una terminal/cmd a la carpeta del projecte (pj6f4a10_Nacho_Marc)
+
+2. Executa la comanda:
+   composer install
+
+   Això instal·larà DomPDF i crearà la carpeta "vendor/"
+
+3. Si no tens Composer instal·lat:
+   - Descarrega Composer de: https://getcomposer.org/download/
+   - O utilitza: php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+   - Després executa: php composer-setup.php
+
+4. Un cop instal·lat, els PDFs funcionaran automàticament quan:
+   - Clics a "Descarregar PDF" a la pàgina de dades del client
+   - Clics a "Generar PDF" al detall de comanda
+
+NOTA: Assegura't que la ruta "vendor/autoload.php" existeix després d'instal·lar.
+

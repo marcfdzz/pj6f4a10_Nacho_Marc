@@ -7,3 +7,8 @@ data/
 *.zip
 vendor/
 mail_config.ini
+mail_log.txt
+comandes_copia/*
+!comandes_copia/.htaccess
+gestio/comandes_gestionades/*
+!gestio/comandes_gestionades/.htaccess

@@ -25,17 +25,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Gestionar afegir/editar
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+// Gestionar afegir (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') !== 'PUT') {
+    $id = '';
+    
+    // Determinar ID nou
+    $maxId = 0;
+    foreach ($dadesProductes as $p) {
+        if (intval($p['id'] ?? 0) > $maxId) $maxId = intval($p['id']);
+    }
+    $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+
+    // Instanciar Producte
+    $producte = new Producte(
+        $id,
+        $_POST['nom'],
+        $_POST['descripcio'],
+        $_POST['preu'],
+        $_POST['imatge'] ?? ''
+    );
+
+    $arrayProducte = $producte->obtenirDades();
+    $arrayProducte['created_at'] = date('c');
+    $dadesProductes[] = $arrayProducte;
+
+    GestorFitxers::guardarTot($fitxerProductes, $dadesProductes);
+    header('Location: productes.php');
+    exit;
+}
+
+// Gestionar editar (PUT)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') === 'PUT') {
     $id = $_POST['id'] ?? '';
     
-    // Determinar ID
     if (!$id) {
-        $maxId = 0;
-        foreach ($dadesProductes as $p) {
-            if (intval($p['id'] ?? 0) > $maxId) $maxId = intval($p['id']);
-        }
-        $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+        header('Location: productes.php');
+        exit;
     }
 
     // Instanciar Producte
@@ -51,22 +76,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $arrayProducte['updated_at'] = date('c');
 
     // Actualitzar llista
-    $trobat = false;
     foreach ($dadesProductes as $key => $p) {
         if (($p['id'] ?? '') === $id) {
+            $arrayProducte['created_at'] = $p['created_at'] ?? date('c');
             $dadesProductes[$key] = $arrayProducte;
-            $trobat = true;
             break;
         }
     }
-    if (!$trobat) {
-        $arrayProducte['created_at'] = date('c');
-        $dadesProductes[] = $arrayProducte;
-    }
 
     GestorFitxers::guardarTot($fitxerProductes, $dadesProductes);
-
-
     header('Location: productes.php');
     exit;
 }
@@ -101,6 +119,9 @@ if (isset($_GET['edit'])) {
         <div class="form-container">
             <h2><?php echo $editProduct ? 'Editar Producte' : 'Afegir Nou Producte'; ?></h2>
             <form method="post">
+                <?php if ($editProduct): ?>
+                    <input type="hidden" name="_method" value="PUT">
+                <?php endif; ?>
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($editProduct['id'] ?? ''); ?>">
                 
                 <div class="form-group">

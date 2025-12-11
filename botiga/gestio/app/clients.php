@@ -60,18 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Gestionar afegir/editar
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    $id = $_POST['id'] ?? '';
+// Gestionar afegir (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') !== 'PUT') {
+    $id = '';
     
-    // Determinar ID
-    if (!$id) {
-        $maxId = 0;
-        foreach ($dadesClients as $c) {
-            if (intval($c['id'] ?? 0) > $maxId) $maxId = intval($c['id']);
-        }
-        $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+    // Determinar ID nou
+    $maxId = 0;
+    foreach ($dadesClients as $c) {
+        if (intval($c['id'] ?? 0) > $maxId) $maxId = intval($c['id']);
     }
+    $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
 
     // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
@@ -100,19 +98,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $arrayClient = $client->obtenirDades();
         $arrayClient['card_encrypted'] = $_POST['card_encrypted'] ?? '';
         $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
-        $arrayClient['created_at'] = $_POST['created_at'] ?? date('c');
+        $arrayClient['created_at'] = date('c');
+
+        // Afegir nou client
+        $dadesClients[] = $arrayClient;
+
+        // Guardar llista principal
+        GestorFitxers::guardarTot($fitxerClients, $dadesClients);
+
+        // Guardar dades individuals del client
+        $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $client->obtenirUsuari();
+        if (!is_dir($dirUsuari)) {
+            mkdir($dirUsuari, 0777, true);
+        }
+        GestorFitxers::guardarTot($dirUsuari . '/dades', $arrayClient);
+
+        header('Location: clients.php');
+        exit;
+    }
+}
+
+// Gestionar editar (PUT)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') === 'PUT') {
+    $id = $_POST['id'] ?? '';
+    
+    if (!$id) {
+        header('Location: clients.php');
+        exit;
+    }
+
+    // Gestionar contrasenya amb validació
+    $passHash = $_POST['hash_existent'] ?? '';
+    if (!empty($_POST['contrasenya'])) {
+        $validacio = validarContrasenya($_POST['contrasenya']);
+        if ($validacio !== true) {
+            $error = $validacio;
+        } else {
+            $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
+        }
+    }
+
+    if (!isset($error)) {
+        // Instanciar objecte Client
+        $client = new Client(
+            $_POST['usuari'],
+            $passHash,
+            $_POST['nom'],
+            $_POST['email'],
+            $_POST['adreca'],
+            $_POST['telefon'],
+            $id
+        );
+
+        // Obtenir array i afegir camps extres
+        $arrayClient = $client->obtenirDades();
+        $arrayClient['card_encrypted'] = $_POST['card_encrypted'] ?? '';
+        $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
 
         // Actualitzar llista
-        $trobat = false;
         foreach ($dadesClients as $key => $c) {
             if (($c['id'] ?? '') === $id) {
+                $arrayClient['created_at'] = $c['created_at'] ?? date('c');
                 $dadesClients[$key] = $arrayClient;
-                $trobat = true;
                 break;
             }
-        }
-        if (!$trobat) {
-            $dadesClients[] = $arrayClient;
         }
 
         // Guardar llista principal
@@ -163,6 +212,9 @@ if (isset($_GET['edit'])) {
                 <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
             <form method="post">
+                <?php if ($editClient): ?>
+                    <input type="hidden" name="_method" value="PUT">
+                <?php endif; ?>
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($editClient['id'] ?? ''); ?>">
                 <input type="hidden" name="hash_existent" value="<?php echo htmlspecialchars($editClient['contrasenya'] ?? $editClient['password'] ?? ''); ?>">
                 <input type="hidden" name="created_at" value="<?php echo htmlspecialchars($editClient['created_at'] ?? ''); ?>">

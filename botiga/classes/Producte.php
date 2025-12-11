@@ -1,10 +1,10 @@
 <?php
-require_once 'IGuardable.php';
 
-class Producte implements IGuardable {
+class Producte {
     private $id;
     private $nom;
     private $descripcio;
+    private $preu;
     private $imatge;
 
     public function __construct($id, $nom, $descripcio, $preu, $imatge = '') {

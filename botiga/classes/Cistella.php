@@ -1,7 +1,6 @@
 <?php
-require_once 'IGuardable.php';
 
-class Cistella implements IGuardable {
+class Cistella {
     private $productes = [];
 
     public function __construct($productes = []) {

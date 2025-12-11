@@ -41,8 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (Mailer::send($adminEmail, $assumpte, $cos)) {
             $missatge = "La teva sol·licitud s'ha enviat correctament.";
         } else {
-           // Error page logic as requested
-           // We will display a special error view below based on this flag
+           // Error: no s'ha pogut enviar el correu
            $fatal_error = true;
         }
     }
@@ -53,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Sol·licitud Canvi Dades</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="container">

@@ -47,10 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Gestionar afegir/editar
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+// Gestionar afegir (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') !== 'PUT') {
     $usuari = $_POST['usuari'];
-    $isEdit = isset($_POST['is_edit']) && $_POST['is_edit'] == '1';
 
     // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
@@ -72,27 +71,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
         $arrayTreballador = $treballador->obtenirDades();
 
-        // Actualitzar llista
-        $trobat = false;
-        foreach ($dadesTreballadors as $key => $w) {
+        // Verificar si l'usuari ja existeix
+        foreach ($dadesTreballadors as $w) {
             if (($w['usuari'] ?? '') === $usuari) {
-                if ($isEdit) {
-                    // Conservar ID si existeix (no crític per la lògica però bona pràctica)
-                    $arrayTreballador['id'] = $w['id'] ?? $arrayTreballador['id'] ?? null;
-                    $arrayTreballador['created_at'] = $w['created_at'] ?? date('c');
-                    
-                    $dadesTreballadors[$key] = $arrayTreballador;
-                    $trobat = true;
-                } else {
-                    echo "<script>alert('L\'usuari ja existeix!'); window.location.href='treballadors.php';</script>";
-                    exit;
-                }
-                break;
+                echo "<script>alert('L\'usuari ja existeix!'); window.location.href='treballadors.php';</script>";
+                exit;
             }
         }
-        if (!$trobat && !$isEdit) {
-            $arrayTreballador['created_at'] = date('c');
-            $dadesTreballadors[] = $arrayTreballador;
+
+        // Afegir nou treballador
+        $arrayTreballador['created_at'] = date('c');
+        $dadesTreballadors[] = $arrayTreballador;
+
+        GestorFitxers::guardarTot($fitxerTreballadors, $dadesTreballadors);
+        header('Location: treballadors.php');
+        exit;
+    }
+}
+
+// Gestionar editar (PUT)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') === 'PUT') {
+    $usuari = $_POST['usuari'];
+    
+    if (!$usuari) {
+        header('Location: treballadors.php');
+        exit;
+    }
+
+    // Gestionar contrasenya amb validació
+    $passHash = $_POST['hash_existent'] ?? '';
+    if (!empty($_POST['contrasenya'])) {
+        $validacio = validarContrasenya($_POST['contrasenya']);
+        if ($validacio !== true) {
+            $error = $validacio;
+        } else {
+            $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
+        }
+    }
+
+    if (!isset($error)) {
+        // Rol
+        $rol = $_POST['rol'];
+        
+        // Constructor Treballador
+        $treballador = new Treballador($usuari, $passHash, $_POST['nom'], $_POST['email'], $rol);
+
+        $arrayTreballador = $treballador->obtenirDades();
+
+        // Actualitzar llista
+        foreach ($dadesTreballadors as $key => $w) {
+            if (($w['usuari'] ?? '') === $usuari) {
+                $arrayTreballador['id'] = $w['id'] ?? $arrayTreballador['id'] ?? null;
+                $arrayTreballador['created_at'] = $w['created_at'] ?? date('c');
+                $dadesTreballadors[$key] = $arrayTreballador;
+                break;
+            }
         }
 
         GestorFitxers::guardarTot($fitxerTreballadors, $dadesTreballadors);
@@ -134,7 +167,9 @@ if (isset($_GET['edit'])) {
                 <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
             <form method="post">
-                <input type="hidden" name="is_edit" value="<?php echo $editTreballador ? '1' : '0'; ?>">
+                <?php if ($editTreballador): ?>
+                    <input type="hidden" name="_method" value="PUT">
+                <?php endif; ?>
                 <input type="hidden" name="hash_existent" value="<?php echo htmlspecialchars($editTreballador['contrasenya'] ?? $editTreballador['password'] ?? ''); ?>">
                 
                 <div class="form-group">

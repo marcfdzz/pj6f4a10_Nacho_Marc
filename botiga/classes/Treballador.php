@@ -1,5 +1,5 @@
 <?php
-require_once 'Persona.php';
+require_once __DIR__ . '/Persona.php';
 
 class Treballador extends Persona {
     private $id;
@@ -8,7 +8,7 @@ class Treballador extends Persona {
         parent::__construct($usuari, $contrasenya, $rol, $nom, $email);
     }
     
-    // Si necesitamos guardar info especifica
+    // Sobreescrivim per afegir la contrasenya a les dades
     public function obtenirDades() {
         $dades = parent::obtenirDades();
         $dades['contrasenya'] = $this->contrasenya;
