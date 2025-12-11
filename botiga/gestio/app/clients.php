@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Client.php';
 
-// Check role
+// Validar rol
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
@@ -12,11 +12,28 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['ro
 $fitxerClients = __DIR__ . '/../clients/clients.json';
 $dadesClients = GestorFitxers::llegirTot($fitxerClients);
 
-// Handle delete
+// Funció per validar requisits mínims de contrasenya
+function validarContrasenya($contrasenya) {
+    if (strlen($contrasenya) < 8) {
+        return "La contrasenya ha de tenir com a mínim 8 caràcters";
+    }
+    if (!preg_match('/[A-Z]/', $contrasenya)) {
+        return "La contrasenya ha de contenir almenys una lletra majúscula";
+    }
+    if (!preg_match('/[a-z]/', $contrasenya)) {
+        return "La contrasenya ha de contenir almenys una lletra minúscula";
+    }
+    if (!preg_match('/[0-9]/', $contrasenya)) {
+        return "La contrasenya ha de contenir almenys un número";
+    }
+    return true;
+}
+
+// Gestionar esborrat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
     
-    // Find client to get username for folder deletion
+    // Trobar client per obtenir nom d'usuari per esborrar carpeta
     $usuariEsborrar = null;
     foreach ($dadesClients as $c) {
         if (($c['id'] ?? '') === $deleteId) {
@@ -31,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     $dadesClients = array_values($dadesClients);
     GestorFitxers::guardarTot($fitxerClients, $dadesClients);
 
-    // Remove individual folder
+    // Esborrar carpeta individual
     if ($usuariEsborrar) {
         $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $usuariEsborrar;
         if (file_exists($dirUsuari . '/dades')) {
@@ -43,11 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Handle add/edit
+// Gestionar afegir/editar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $id = $_POST['id'] ?? '';
     
-    // Determine ID
+    // Determinar ID
     if (!$id) {
         $maxId = 0;
         foreach ($dadesClients as $c) {
@@ -56,57 +73,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    // Password handling
+    // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
     if (!empty($_POST['contrasenya'])) {
-        $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
-    }
-
-    // Instantiate Client object ($usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id)
-    $client = new Client(
-        $_POST['usuari'],
-        $passHash,
-        $_POST['nom'],
-        $_POST['email'],
-        $_POST['adreca'],
-        $_POST['telefon'],
-        $id
-    );
-
-    // Get array and add extra fields
-    $arrayClient = $client->obtenirDades();
-    $arrayClient['card_encrypted'] = $_POST['card_encrypted'] ?? '';
-    $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
-    $arrayClient['created_at'] = $_POST['created_at'] ?? date('c');
-
-    // Update list
-    $trobat = false;
-    foreach ($dadesClients as $key => $c) {
-        if (($c['id'] ?? '') === $id) {
-            $dadesClients[$key] = $arrayClient;
-            $trobat = true;
-            break;
+        $validacio = validarContrasenya($_POST['contrasenya']);
+        if ($validacio !== true) {
+            $error = $validacio;
+        } else {
+            $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
         }
     }
-    if (!$trobat) {
-        $dadesClients[] = $arrayClient;
+
+    if (!isset($error)) {
+        // Instanciar objecte Client ($usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id)
+        $client = new Client(
+            $_POST['usuari'],
+            $passHash,
+            $_POST['nom'],
+            $_POST['email'],
+            $_POST['adreca'],
+            $_POST['telefon'],
+            $id
+        );
+
+        // Obtenir array i afegir camps extres
+        $arrayClient = $client->obtenirDades();
+        $arrayClient['card_encrypted'] = $_POST['card_encrypted'] ?? '';
+        $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
+        $arrayClient['created_at'] = $_POST['created_at'] ?? date('c');
+
+        // Actualitzar llista
+        $trobat = false;
+        foreach ($dadesClients as $key => $c) {
+            if (($c['id'] ?? '') === $id) {
+                $dadesClients[$key] = $arrayClient;
+                $trobat = true;
+                break;
+            }
+        }
+        if (!$trobat) {
+            $dadesClients[] = $arrayClient;
+        }
+
+        // Guardar llista principal
+        GestorFitxers::guardarTot($fitxerClients, $dadesClients);
+
+        // Guardar dades individuals del client
+        $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $client->obtenirUsuari();
+        if (!is_dir($dirUsuari)) {
+            mkdir($dirUsuari, 0777, true);
+        }
+        GestorFitxers::guardarTot($dirUsuari . '/dades', $arrayClient);
+
+        header('Location: clients.php');
+        exit;
     }
-
-    // Save main list
-    GestorFitxers::guardarTot($fitxerClients, $dadesClients);
-
-    // Save individual client data
-    $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $client->obtenirUsuari();
-    if (!is_dir($dirUsuari)) {
-        mkdir($dirUsuari, 0777, true);
-    }
-    GestorFitxers::guardarTot($dirUsuari . '/dades', $arrayClient);
-
-    header('Location: clients.php');
-    exit;
 }
 
-// Get client for editing
+// Obtenir client per editar
 $editClient = null;
 if (isset($_GET['edit'])) {
     foreach ($dadesClients as $c) {
@@ -123,7 +147,7 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestió de Clients</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container">
@@ -135,6 +159,9 @@ if (isset($_GET['edit'])) {
         <?php if ($editClient || isset($_GET['add'])): ?>
         <div class="form-container">
             <h2><?php echo $editClient ? 'Editar Client' : 'Afegir Nou Client'; ?></h2>
+            <?php if (isset($error)): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
             <form method="post">
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($editClient['id'] ?? ''); ?>">
                 <input type="hidden" name="hash_existent" value="<?php echo htmlspecialchars($editClient['contrasenya'] ?? $editClient['password'] ?? ''); ?>">

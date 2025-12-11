@@ -4,7 +4,7 @@ require_once __DIR__ . '/../classes/GestorFitxers.php';
 require_once __DIR__ . '/../classes/Cistella.php';
 require_once __DIR__ . '/../classes/Producte.php';
 
-// Validar sesion (en catalan)
+// Validar sessió
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'client') {
     header('Location: inici_sessio.php');
     exit;
@@ -14,32 +14,32 @@ $usuariActual = $_SESSION['usuari'];
 $fitxerProductes = __DIR__.'/../gestio/productes/productes.json';
 $dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
-// Cart file
+// Fitxer de cistella
 $dirArea = __DIR__.'/area_clients/' . $usuariActual;
 if (!is_dir($dirArea)) mkdir($dirArea, 0777, true);
 $fitxerCistella = $dirArea . '/cistella';
 
-// Cargar cistella
+// Carregar cistella
 $dadesCistella = GestorFitxers::llegirTot($fitxerCistella);
 $cistella = new Cistella($dadesCistella);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Añadir productos
+    // Afegir productes
     if (!empty($_POST['quantities']) && is_array($_POST['quantities'])) {
         foreach ($_POST['quantities'] as $pid => $q) {
             $qty = intval($q);
             if ($qty > 0) {
-                // Metodo en catalan
+                // Mètode en català
                 $cistella->afegir($pid, $qty);
             }
         }
-        // Guardar usando interfaz obtenirDades
+        // Guardar utilitzant interfície obtenirDades
         GestorFitxers::guardarTot($fitxerCistella, $cistella->obtenirDades());
         echo "<script>alert('Productes afegits!'); window.location.href='cistella.php';</script>";
         exit;
     }
     
-    // Vaciar
+    // Buidar
     if (isset($_POST['clear'])) {
         $cistella->establirProductes([]);
         GestorFitxers::guardarTot($fitxerCistella, []);
@@ -55,8 +55,7 @@ $itemsCistella = $cistella->obtenirProductes();
 <head>
     <meta charset="UTF-8">
     <title>La meva cistella</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="container">

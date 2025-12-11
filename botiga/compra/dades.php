@@ -23,13 +23,64 @@ if (!$dadesUsuari) {
     echo "No s'han trobat les dades.";
     exit;
 }
+
+// Generar PDF amb DomPDF
+if (isset($_GET['generar_pdf'])) {
+    require_once __DIR__ . '/../../vendor/autoload.php';
+    
+    $dompdf = new \Dompdf\Dompdf();
+    
+    $html = '<!DOCTYPE html>
+    <html lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            .field { margin: 15px 0; }
+            .label { font-weight: bold; display: inline-block; width: 150px; }
+            .value { display: inline-block; }
+        </style>
+    </head>
+    <body>
+        <h1>Dades del Client</h1>
+        <div class="field">
+            <span class="label">Usuari:</span>
+            <span class="value">' . htmlspecialchars($dadesUsuari['usuari'] ?? '') . '</span>
+        </div>
+        <div class="field">
+            <span class="label">Nom Complet:</span>
+            <span class="value">' . htmlspecialchars($dadesUsuari['nom'] ?? '') . '</span>
+        </div>
+        <div class="field">
+            <span class="label">Email:</span>
+            <span class="value">' . htmlspecialchars($dadesUsuari['email'] ?? '') . '</span>
+        </div>
+        <div class="field">
+            <span class="label">Telèfon:</span>
+            <span class="value">' . htmlspecialchars($dadesUsuari['telefon'] ?? '') . '</span>
+        </div>
+        <div class="field">
+            <span class="label">Adreça:</span>
+            <span class="value">' . htmlspecialchars($dadesUsuari['adreca'] ?? '') . '</span>
+        </div>
+        <p style="margin-top: 30px; font-size: 12px; color: #666;">Generat el ' . date('d/m/Y H:i') . '</p>
+    </body>
+    </html>';
+    
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+    $dompdf->stream("dades_client_" . $usuariActual . ".pdf", array("Attachment" => true));
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
     <title>Les meves dades</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="container">
@@ -60,7 +111,7 @@ if (!$dadesUsuari) {
         </div>
         
         <div class="no-print mt-20">
-            <button onclick="window.print()" class="btn btn-primary">Descarregar PDF</button>
+            <a href="?generar_pdf=1" class="btn btn-primary">Descarregar PDF</a>
         </div>
     </div>
 </body>

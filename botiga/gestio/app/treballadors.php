@@ -3,7 +3,24 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Treballador.php';
 
-// Check role: admin only
+// Funció per validar requisits mínims de contrasenya
+function validarContrasenya($contrasenya) {
+    if (strlen($contrasenya) < 8) {
+        return "La contrasenya ha de tenir com a mínim 8 caràcters";
+    }
+    if (!preg_match('/[A-Z]/', $contrasenya)) {
+        return "La contrasenya ha de contenir almenys una lletra majúscula";
+    }
+    if (!preg_match('/[a-z]/', $contrasenya)) {
+        return "La contrasenya ha de contenir almenys una lletra minúscula";
+    }
+    if (!preg_match('/[0-9]/', $contrasenya)) {
+        return "La contrasenya ha de contenir almenys un número";
+    }
+    return true;
+}
+
+// Validar rol: només admin
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'admin') {
     header('Location: inici_sessio.php');
     exit;
@@ -12,10 +29,10 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'admin') {
 $fitxerTreballadors = __DIR__ . '/../treballadors/treballadors.json';
 $dadesTreballadors = GestorFitxers::llegirTot($fitxerTreballadors);
 
-// Handle delete
+// Gestionar esborrat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $usuariEsborrar = $_POST['usuari_esborrar'];
-    // Prevent deleting self
+    // Prevenir esborrar-se a un mateix
     if ($usuariEsborrar === $_SESSION['usuari']) {
         echo "<script>alert('No pots esborrar-te a tu mateix!'); window.location.href='treballadors.php';</script>";
         exit;
@@ -30,54 +47,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Handle add/edit
+// Gestionar afegir/editar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $usuari = $_POST['usuari'];
     $isEdit = isset($_POST['is_edit']) && $_POST['is_edit'] == '1';
 
-    // Password handling
+    // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
     if (!empty($_POST['contrasenya'])) {
-        $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
-    }
-
-    // Role
-    $rol = $_POST['rol'];
-    
-    // Treballador constructor: $usuari, $contrasenya, $nom, $email, $rol
-    $treballador = new Treballador($usuari, $passHash, $_POST['nom'], $_POST['email'], $rol);
-
-    $arrayTreballador = $treballador->obtenirDades();
-
-    // Update list
-    $trobat = false;
-    foreach ($dadesTreballadors as $key => $w) {
-        if (($w['usuari'] ?? '') === $usuari) {
-            if ($isEdit) {
-                // Preserve ID if exists (not critical for logic but good practice)
-                $arrayTreballador['id'] = $w['id'] ?? $arrayTreballador['id'] ?? null;
-                $arrayTreballador['created_at'] = $w['created_at'] ?? date('c');
-                
-                $dadesTreballadors[$key] = $arrayTreballador;
-                $trobat = true;
-            } else {
-                echo "<script>alert('L\'usuari ja existeix!'); window.location.href='treballadors.php';</script>";
-                exit;
-            }
-            break;
+        $validacio = validarContrasenya($_POST['contrasenya']);
+        if ($validacio !== true) {
+            $error = $validacio;
+        } else {
+            $passHash = password_hash($_POST['contrasenya'], PASSWORD_DEFAULT);
         }
     }
-    if (!$trobat && !$isEdit) {
-        $arrayTreballador['created_at'] = date('c');
-        $dadesTreballadors[] = $arrayTreballador;
-    }
 
-    GestorFitxers::guardarTot($fitxerTreballadors, $dadesTreballadors);
-    header('Location: treballadors.php');
-    exit;
+    if (!isset($error)) {
+        // Rol
+        $rol = $_POST['rol'];
+        
+        // Constructor Treballador: $usuari, $contrasenya, $nom, $email, $rol
+        $treballador = new Treballador($usuari, $passHash, $_POST['nom'], $_POST['email'], $rol);
+
+        $arrayTreballador = $treballador->obtenirDades();
+
+        // Actualitzar llista
+        $trobat = false;
+        foreach ($dadesTreballadors as $key => $w) {
+            if (($w['usuari'] ?? '') === $usuari) {
+                if ($isEdit) {
+                    // Conservar ID si existeix (no crític per la lògica però bona pràctica)
+                    $arrayTreballador['id'] = $w['id'] ?? $arrayTreballador['id'] ?? null;
+                    $arrayTreballador['created_at'] = $w['created_at'] ?? date('c');
+                    
+                    $dadesTreballadors[$key] = $arrayTreballador;
+                    $trobat = true;
+                } else {
+                    echo "<script>alert('L\'usuari ja existeix!'); window.location.href='treballadors.php';</script>";
+                    exit;
+                }
+                break;
+            }
+        }
+        if (!$trobat && !$isEdit) {
+            $arrayTreballador['created_at'] = date('c');
+            $dadesTreballadors[] = $arrayTreballador;
+        }
+
+        GestorFitxers::guardarTot($fitxerTreballadors, $dadesTreballadors);
+        header('Location: treballadors.php');
+        exit;
+    }
 }
 
-// Get worker for editing
+// Obtenir treballador per editar
 $editTreballador = null;
 if (isset($_GET['edit'])) {
     foreach ($dadesTreballadors as $w) {
@@ -94,7 +118,7 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestió de Treballadors</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container">
@@ -106,6 +130,9 @@ if (isset($_GET['edit'])) {
         <?php if ($editTreballador || isset($_GET['add'])): ?>
         <div class="form-container">
             <h2><?php echo $editTreballador ? 'Editar Treballador' : 'Afegir Nou Treballador'; ?></h2>
+            <?php if (isset($error)): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
             <form method="post">
                 <input type="hidden" name="is_edit" value="<?php echo $editTreballador ? '1' : '0'; ?>">
                 <input type="hidden" name="hash_existent" value="<?php echo htmlspecialchars($editTreballador['contrasenya'] ?? $editTreballador['password'] ?? ''); ?>">

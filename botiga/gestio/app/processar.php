@@ -3,14 +3,14 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Mailer.php';
 
-// Check role: admin or treballador
+// Validar rol: admin o treballador
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
 }
 
 $missatge = '';
-$tipus = ''; // success or error
+$tipus = ''; // èxit o error
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = $_POST['file'] ?? '';
@@ -43,13 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $comanda = GestorFitxers::llegirTot($source);
             $nomClient = $comanda['usuari'] ?? $comanda['client'] ?? '';
 
-            // Find client email
+            // Trobar email del client
             $clientsFile = __DIR__ . '/../clients/clients.json';
             $clients = GestorFitxers::llegirTot($clientsFile);
             $clientEmail = '';
             
             foreach ($clients as $c) {
-                // Check various possible keys for username
+                // Comprovar diverses claus possibles per nom d'usuari
                 $u = $c['usuari'] ?? $c['nombreUsuario'] ?? $c['username'] ?? '';
                 if ($u === $nomClient) {
                     $clientEmail = $c['email'] ?? $c['correo'] ?? '';
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Resultat</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container" style="text-align: center; margin-top: 50px;">

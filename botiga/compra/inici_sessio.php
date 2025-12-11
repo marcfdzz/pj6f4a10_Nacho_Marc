@@ -12,12 +12,12 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   $trobat = null;
 
   foreach ($dadesClients as $d) {
-      // Support old and new keys just in case, but prefer new
+      // Suportar claus antigues i noves per si de cas, però preferir les noves
       $dbUsuari = $d['usuari'] ?? $d['username'] ?? $d['nombreUsuario'] ?? '';
       $dbPass = $d['contrasenya'] ?? $d['password'] ?? '';
       
       if ($dbUsuari === $usuariInput && password_verify($contrasenyaInput, $dbPass)) {
-          // Map to Client constructor: $usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id
+          // Mapejar al constructor Client: $usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id
           $trobat = new Client(
               $dbUsuari,
               $dbPass, 
@@ -46,7 +46,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 <head>
     <meta charset="UTF-8">
     <title>Login Compra</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/compra.css">
 </head>
 <body>
     <div class="login-container">

@@ -17,7 +17,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         $dbRol = $d['rol'] ?? $d['role'] ?? 'treballador';
 
         if ($dbUsuari === $usuariInput && password_verify($contrasenyaInput, $dbPass)) {
-             // Instanciar objeto Treballador (serveix per admin tambe)
+             // Instanciar objecte Treballador (serveix per admin també)
              $trobat = new Treballador(
                 $dbUsuari, 
                 $dbPass, 
@@ -43,7 +43,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container" style="max-width: 400px;">

@@ -1,8 +1,7 @@
 <?php
-require_once 'IGuardable.php';
 
-// Clase base simple
-class Persona implements IGuardable {
+// Classe base simple
+class Persona {
     protected $usuari;
     protected $contrasenya;
     protected $rol;
@@ -22,7 +21,7 @@ class Persona implements IGuardable {
     public function obtenirRol() { return $this->rol; }
     public function obtenirNom() { return $this->nom; }
     
-    // Implementacion interfaz
+    // Implementació interfície
     public function obtenirDades() {
         return [
             'usuari' => $this->usuari,

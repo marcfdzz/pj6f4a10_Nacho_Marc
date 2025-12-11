@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Producte.php';
 
-// Check role
+// Validar rol
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
@@ -12,7 +12,7 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['ro
 $fitxerProductes = __DIR__ . '/../productes/productes.json';
 $dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
-// Handle delete
+// Gestionar esborrat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
     $dadesProductes = array_filter($dadesProductes, function($p) use ($deleteId) {
@@ -25,11 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Handle add/edit
+// Gestionar afegir/editar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $id = $_POST['id'] ?? '';
     
-    // Determine ID
+    // Determinar ID
     if (!$id) {
         $maxId = 0;
         foreach ($dadesProductes as $p) {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    // Instantiate Producte
+    // Instanciar Producte
     $producte = new Producte(
         $id,
         $_POST['nom'],
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $arrayProducte = $producte->obtenirDades();
     $arrayProducte['updated_at'] = date('c');
 
-    // Update list
+    // Actualitzar llista
     $trobat = false;
     foreach ($dadesProductes as $key => $p) {
         if (($p['id'] ?? '') === $id) {
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     exit;
 }
 
-// Get product for editing
+// Obtenir producte per editar
 $editProduct = null;
 if (isset($_GET['edit'])) {
     foreach ($dadesProductes as $p) {
@@ -88,7 +88,7 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestió de Productes</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../../css/gestio.css">
 </head>
 <body>
     <div class="container">
