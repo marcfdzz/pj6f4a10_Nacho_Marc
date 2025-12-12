@@ -31,17 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $missatge = "No has indicat cap dada per canviar.";
         $error = true;
     } else {
-        $adminEmail = Mailer::getAdminEmail();
+        $correuAdmin = Mailer::obtenirEmailAdmin();
         $assumpte = "Sol·licitud de canvi de dades - Client: " . $_SESSION['usuari'];
         $cos = "<h2>Petició de canvi de dades</h2>";
         $cos .= "<p>L'usuari <strong>{$_SESSION['usuari']}</strong> ha sol·licitat canviar les següents dades:</p>";
         $cos .= $canvis;
         $cos .= "<br><p>Si us plau, revisa la sol·licitud.</p>";
 
-        if (Mailer::send($adminEmail, $assumpte, $cos)) {
+        if (Mailer::enviar($correuAdmin, $assumpte, $cos)) {
             $missatge = "La teva sol·licitud s'ha enviat correctament.";
         } else {
-           $fatal_error = true;
+           $errorFatal = true;
         }
     }
 }
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <?php if (isset($fatal_error) && $fatal_error): ?>
+        <?php if (isset($errorFatal) && $errorFatal): ?>
             <div style="text-align: center; color: #dc3545;">
                 <h1>Error en l'enviament</h1>
                 <p>No s'ha pogut enviar el correu de sol·licitud. Si us plau, intenta-ho més tard.</p>

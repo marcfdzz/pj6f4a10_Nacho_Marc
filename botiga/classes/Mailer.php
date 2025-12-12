@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -13,9 +13,9 @@ class Mailer {
     private static $fromName = 'SportVibe';
     private static $adminEmail = 'marc.fernandezv@gmail.com';
     
-    public static function send($to, $subject, $body) {
-        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
-            self::log("Email invàlid: $to");
+    public static function enviar($destinatari, $assumpte, $cos) {
+        if (!filter_var($destinatari, FILTER_VALIDATE_EMAIL)) {
+            self::log("Email invàlid: $destinatari");
             return false;
         }
         
@@ -30,21 +30,21 @@ class Mailer {
             $mail->Port = self::$smtpPort;
             $mail->CharSet = 'UTF-8';
             $mail->setFrom(self::$fromEmail, self::$fromName);
-            $mail->addAddress($to);
+            $mail->addAddress($destinatari);
             $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body = $body;
+            $mail->Subject = $assumpte;
+            $mail->Body = $cos;
             $mail->send();
-            self::log("Correu enviat a: $to");
+            self::log("Correu enviat a: $destinatari");
             return true;
         } catch (Exception $e) {
-            $errorMsg = isset($mail) ? $mail->ErrorInfo : $e->getMessage();
-            self::log("Error: " . $errorMsg);
+            $missatgeError = isset($mail) ? $mail->ErrorInfo : $e->getMessage();
+            self::log("Error: " . $missatgeError);
             return false;
         }
     }
     
-    public static function getAdminEmail() {
+    public static function obtenirEmailAdmin() {
         return self::$adminEmail;
     }
     

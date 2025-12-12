@@ -12,23 +12,23 @@ $missatge = '';
 $tipus = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $file = $_POST['file'] ?? '';
-    if (!$file) {
+    $fitxer = $_POST['file'] ?? '';
+    if (!$fitxer) {
         header('Location: comandes.php');
         exit;
     }
 
     $pendingDir = __DIR__ . '/../../comandes_copia';
     $processedDir = __DIR__ . '/../comandes_gestionades';
-    $source = $pendingDir . '/' . $file;
-    $dest = $processedDir . '/' . $file;
+    $origen = $pendingDir . '/' . $fitxer;
+    $desti = $processedDir . '/' . $fitxer;
 
     if (isset($_POST['process'])) {
-        if (file_exists($source)) {
+        if (file_exists($origen)) {
             if (!is_dir($processedDir)) mkdir($processedDir, 0777, true);
-            if (rename($source, $dest)) {
+            if (rename($origen, $desti)) {
                 $missatge = "Comanda processada i moguda correctament.";
-                $tipus = 'success';
+                $tipus = 'exit';
             } else {
                 $missatge = "Error al moure l'arxiu.";
                 $tipus = 'error';
@@ -38,32 +38,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $tipus = 'error';
         }
     } elseif (isset($_POST['email'])) {
-        if (file_exists($source)) {
-            $comanda = GestorFitxers::llegirTot($source);
+        if (file_exists($origen)) {
+            $comanda = GestorFitxers::llegirTot($origen);
             $nomClient = $comanda['usuari'] ?? $comanda['client'] ?? '';
 
             $clientsFile = __DIR__ . '/../clients/clients.json';
             $clients = GestorFitxers::llegirTot($clientsFile);
-            $clientEmail = '';
+            $correuClient = '';
             
             foreach ($clients as $c) {
                 $u = $c['usuari'] ?? $c['nombreUsuario'] ?? $c['username'] ?? '';
                 if ($u === $nomClient) {
-                    $clientEmail = $c['email'] ?? $c['correo'] ?? '';
+                    $correuClient = $c['email'] ?? $c['correo'] ?? '';
                     break;
                 }
             }
 
-            if ($clientEmail) {
+            if ($correuClient) {
                 $idComanda = $comanda['id'] ?? 'Desconegut';
-                $subject = "Comanda Processada - ID: $idComanda";
-                $body = "<h2>Hola $nomClient,</h2>";
-                $body .= "<p>La teva comanda amb ID <strong>$idComanda</strong> ha estat processada correctament.</p>";
-                $body .= "<p>Gràcies!</p>";
+                $assumpte = "Comanda Processada - ID: $idComanda";
+                $cos = "<h2>Hola $nomClient,</h2>";
+                $cos .= "<p>La teva comanda amb ID <strong>$idComanda</strong> ha estat processada correctament.</p>";
+                $cos .= "<p>Gràcies!</p>";
 
-                if (Mailer::send($clientEmail, $subject, $body)) {
-                    $missatge = "Correu enviat a $clientEmail.";
-                    $tipus = 'success';
+                if (Mailer::enviar($correuClient, $assumpte, $cos)) {
+                    $missatge = "Correu enviat a $correuClient.";
+                    $tipus = 'exit';
                 } else {
                     $missatge = "Error enviant correu.";
                     $tipus = 'error';
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container" style="text-align: center; margin-top: 50px;">
-        <div class="alert alert-<?php echo ($tipus == 'success') ? 'success' : 'danger'; ?>">
+        <div class="alert alert-<?php echo ($tipus == 'exit') ? 'success' : 'danger'; ?>">
             <?php echo htmlspecialchars($missatge); ?>
         </div>
         <br>

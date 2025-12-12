@@ -12,13 +12,13 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $trobat = null;
     
     foreach ($dadesClients as $d) {
-        $dbUsuari = $d['usuari'] ?? $d['username'] ?? $d['nombreUsuario'] ?? '';
-        $dbPass = $d['contrasenya'] ?? $d['password'] ?? '';
+        $usuariFitxer = $d['usuari'] ?? $d['username'] ?? $d['nombreUsuario'] ?? '';
+        $passFitxer = $d['contrasenya'] ?? $d['password'] ?? '';
         
-        if ($dbUsuari === $usuariInput && password_verify($contrasenyaInput, $dbPass)) {
+        if ($usuariFitxer === $usuariInput && password_verify($contrasenyaInput, $passFitxer)) {
             $trobat = new Client(
-                $dbUsuari,
-                $dbPass,
+                $usuariFitxer,
+                $passFitxer,
                 $d['nom'] ?? $d['name'] ?? $d['nombre'] ?? '',
                 $d['email'] ?? $d['correo'] ?? '',
                 $d['adreca'] ?? $d['address'] ?? $d['direccion'] ?? '',

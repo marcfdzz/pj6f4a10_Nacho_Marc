@@ -12,17 +12,17 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $trobat = null;
 
     foreach ($dadesTreballadors as $d) {
-        $dbUsuari = $d['usuari'] ?? $d['username'] ?? $d['nombreUsuario'] ?? '';
-        $dbPass = $d['contrasenya'] ?? $d['password'] ?? '';
-        $dbRol = $d['rol'] ?? $d['role'] ?? 'treballador';
+        $usuariFitxer = $d['usuari'] ?? $d['username'] ?? $d['nombreUsuario'] ?? '';
+        $passFitxer = $d['contrasenya'] ?? $d['password'] ?? '';
+        $rolFitxer = $d['rol'] ?? $d['role'] ?? 'treballador';
 
-        if ($dbUsuari === $usuariInput && password_verify($contrasenyaInput, $dbPass)) {
+        if ($usuariFitxer === $usuariInput && password_verify($contrasenyaInput, $passFitxer)) {
              $trobat = new Treballador(
-                $dbUsuari, 
-                $dbPass, 
+                $usuariFitxer, 
+                $passFitxer, 
                 $d['nom'] ?? $d['name'] ?? $d['nombre'] ?? '',
                 $d['email'] ?? $d['correo'] ?? '',
-                $dbRol
+                $rolFitxer
              );
              break;
         }
