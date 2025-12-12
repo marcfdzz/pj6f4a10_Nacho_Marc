@@ -8,7 +8,6 @@ class Treballador extends Persona {
         parent::__construct($usuari, $contrasenya, $rol, $nom, $email);
     }
     
-    // Sobreescrivim per afegir la contrasenya a les dades
     public function obtenirDades() {
         $dades = parent::obtenirDades();
         $dades['contrasenya'] = $this->contrasenya;

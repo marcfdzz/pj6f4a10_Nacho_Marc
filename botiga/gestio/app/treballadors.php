@@ -3,16 +3,15 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Treballador.php';
 
-// Funció per validar requisits mínims de contrasenya
 function validarContrasenya($contrasenya) {
     if (strlen($contrasenya) < 8) {
         return "La contrasenya ha de tenir com a mínim 8 caràcters";
     }
     if (!preg_match('/[A-Z]/', $contrasenya)) {
-        return "La contrasenya ha de contenir almenys una lletra majúscula";
+        return "La contrasenya ha de contenir almenys una majúscula";
     }
     if (!preg_match('/[a-z]/', $contrasenya)) {
-        return "La contrasenya ha de contenir almenys una lletra minúscula";
+        return "La contrasenya ha de contenir almenys una minúscula";
     }
     if (!preg_match('/[0-9]/', $contrasenya)) {
         return "La contrasenya ha de contenir almenys un número";
@@ -20,7 +19,6 @@ function validarContrasenya($contrasenya) {
     return true;
 }
 
-// Validar rol: només admin
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'admin') {
     header('Location: inici_sessio.php');
     exit;
@@ -29,10 +27,8 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] ?? '') !== 'admin') {
 $fitxerTreballadors = __DIR__ . '/../treballadors/treballadors.json';
 $dadesTreballadors = GestorFitxers::llegirTot($fitxerTreballadors);
 
-// Gestionar esborrat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $usuariEsborrar = $_POST['usuari_esborrar'];
-    // Prevenir esborrar-se a un mateix
     if ($usuariEsborrar === $_SESSION['usuari']) {
         echo "<script>alert('No pots esborrar-te a tu mateix!'); window.location.href='treballadors.php';</script>";
         exit;
@@ -47,11 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Gestionar afegir (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') !== 'PUT') {
     $usuari = $_POST['usuari'];
 
-    // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
     if (!empty($_POST['contrasenya'])) {
         $validacio = validarContrasenya($_POST['contrasenya']);
@@ -63,15 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     }
 
     if (!isset($error)) {
-        // Rol
         $rol = $_POST['rol'];
         
-        // Constructor Treballador: $usuari, $contrasenya, $nom, $email, $rol
         $treballador = new Treballador($usuari, $passHash, $_POST['nom'], $_POST['email'], $rol);
 
         $arrayTreballador = $treballador->obtenirDades();
 
-        // Verificar si l'usuari ja existeix
         foreach ($dadesTreballadors as $w) {
             if (($w['usuari'] ?? '') === $usuari) {
                 echo "<script>alert('L\'usuari ja existeix!'); window.location.href='treballadors.php';</script>";
@@ -79,7 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
             }
         }
 
-        // Afegir nou treballador
         $arrayTreballador['created_at'] = date('c');
         $dadesTreballadors[] = $arrayTreballador;
 
@@ -98,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
         exit;
     }
 
-    // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
     if (!empty($_POST['contrasenya'])) {
         $validacio = validarContrasenya($_POST['contrasenya']);
@@ -110,15 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     }
 
     if (!isset($error)) {
-        // Rol
         $rol = $_POST['rol'];
         
-        // Constructor Treballador
         $treballador = new Treballador($usuari, $passHash, $_POST['nom'], $_POST['email'], $rol);
 
         $arrayTreballador = $treballador->obtenirDades();
 
-        // Actualitzar llista
         foreach ($dadesTreballadors as $key => $w) {
             if (($w['usuari'] ?? '') === $usuari) {
                 $arrayTreballador['id'] = $w['id'] ?? $arrayTreballador['id'] ?? null;
@@ -134,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     }
 }
 
-// Obtenir treballador per editar
 $editTreballador = null;
 if (isset($_GET['edit'])) {
     foreach ($dadesTreballadors as $w) {

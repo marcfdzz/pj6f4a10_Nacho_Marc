@@ -24,11 +24,16 @@ if (!$dadesUsuari) {
     exit;
 }
 
-// Generar PDF amb DomPDF
 if (isset($_GET['generar_pdf'])) {
     require_once __DIR__ . '/../../vendor/autoload.php';
     
     $dompdf = new \Dompdf\Dompdf();
+    
+    $usuari = htmlspecialchars($dadesUsuari['usuari'] ?? '');
+    $nom = htmlspecialchars($dadesUsuari['nom'] ?? '');
+    $email = htmlspecialchars($dadesUsuari['email'] ?? '');
+    $telefon = htmlspecialchars($dadesUsuari['telefon'] ?? '');
+    $adreca = htmlspecialchars($dadesUsuari['adreca'] ?? '');
     
     $html = '<!DOCTYPE html>
     <html lang="ca">
@@ -39,30 +44,24 @@ if (isset($_GET['generar_pdf'])) {
             h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
             .field { margin: 15px 0; }
             .label { font-weight: bold; display: inline-block; width: 150px; }
-            .value { display: inline-block; }
         </style>
     </head>
     <body>
         <h1>Dades del Client</h1>
         <div class="field">
-            <span class="label">Usuari:</span>
-            <span class="value">' . htmlspecialchars($dadesUsuari['usuari'] ?? '') . '</span>
+            <span class="label">Usuari:</span> ' . $usuari . '
         </div>
         <div class="field">
-            <span class="label">Nom Complet:</span>
-            <span class="value">' . htmlspecialchars($dadesUsuari['nom'] ?? '') . '</span>
+            <span class="label">Nom Complet:</span> ' . $nom . '
         </div>
         <div class="field">
-            <span class="label">Email:</span>
-            <span class="value">' . htmlspecialchars($dadesUsuari['email'] ?? '') . '</span>
+            <span class="label">Email:</span> ' . $email . '
         </div>
         <div class="field">
-            <span class="label">Telèfon:</span>
-            <span class="value">' . htmlspecialchars($dadesUsuari['telefon'] ?? '') . '</span>
+            <span class="label">Telèfon:</span> ' . $telefon . '
         </div>
         <div class="field">
-            <span class="label">Adreça:</span>
-            <span class="value">' . htmlspecialchars($dadesUsuari['adreca'] ?? '') . '</span>
+            <span class="label">Adreça:</span> ' . $adreca . '
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666;">Generat el ' . date('d/m/Y H:i') . '</p>
     </body>

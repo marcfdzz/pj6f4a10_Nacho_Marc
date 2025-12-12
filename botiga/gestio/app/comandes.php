@@ -2,7 +2,6 @@
 session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 
-// Validar rol
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;

@@ -3,14 +3,13 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Mailer.php';
 
-// Validar rol: admin o treballador
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
 }
 
 $missatge = '';
-$tipus = ''; // èxit o error
+$tipus = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = $_POST['file'] ?? '';
@@ -43,13 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $comanda = GestorFitxers::llegirTot($source);
             $nomClient = $comanda['usuari'] ?? $comanda['client'] ?? '';
 
-            // Trobar email del client
             $clientsFile = __DIR__ . '/../clients/clients.json';
             $clients = GestorFitxers::llegirTot($clientsFile);
             $clientEmail = '';
             
             foreach ($clients as $c) {
-                // Comprovar diverses claus possibles per nom d'usuari
                 $u = $c['usuari'] ?? $c['nombreUsuario'] ?? $c['username'] ?? '';
                 if ($u === $nomClient) {
                     $clientEmail = $c['email'] ?? $c['correo'] ?? '';
@@ -58,21 +55,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($clientEmail) {
-                $subject = "Comanda Processada - ID: " . ($comanda['id'] ?? 'Desconegut');
+                $idComanda = $comanda['id'] ?? 'Desconegut';
+                $subject = "Comanda Processada - ID: $idComanda";
                 $body = "<h2>Hola $nomClient,</h2>";
-                $body .= "<p>Ens complau informar-te que la teva comanda amb ID <strong>" . ($comanda['id'] ?? 'N/A') . "</strong> ha estat processada correctament.</p>";
-                $body .= "<p>Gràcies per confiar en nosaltres.</p>";
+                $body .= "<p>La teva comanda amb ID <strong>$idComanda</strong> ha estat processada correctament.</p>";
+                $body .= "<p>Gràcies!</p>";
 
                 if (Mailer::send($clientEmail, $subject, $body)) {
-                    $missatge = "Correu enviat correctament a $clientEmail.";
+                    $missatge = "Correu enviat a $clientEmail.";
                     $tipus = 'success';
                 } else {
-                    $missatge = "Error: No s'ha pogut enviar el correu.";
+                    $missatge = "Error enviant correu.";
                     $tipus = 'error';
                 }
             } else {
-                 $missatge = "Error: No s'ha trobat el correu electrònic del client ($nomClient).";
-                 $tipus = 'error';
+                $missatge = "No s'ha trobat el correu del client ($nomClient).";
+                $tipus = 'error';
             }
         } else {
             $missatge = "L'arxiu de comanda no existeix.";

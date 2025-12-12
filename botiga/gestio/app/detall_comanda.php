@@ -2,7 +2,6 @@
 session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 
-// Validar rol
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
@@ -19,7 +18,6 @@ if (!$fitxer || !file_exists($rutaFitxer)) {
 
 $comanda = GestorFitxers::llegirTot($rutaFitxer);
 
-// Obtenir productes per noms
 $fitxerProductes = __DIR__ . '/../productes/productes.json';
 $dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
@@ -30,11 +28,15 @@ function obtenirNomProducte($pid, $dadesProductes) {
     return 'Desconegut';
 }
 
-// Generar PDF amb DomPDF
 if (isset($_GET['generar_pdf'])) {
     require_once __DIR__ . '/../../../vendor/autoload.php';
     
     $dompdf = new \Dompdf\Dompdf();
+    
+    $idComanda = htmlspecialchars($comanda['id'] ?? '');
+    $nomClient = htmlspecialchars($comanda['usuari'] ?? $comanda['client'] ?? '');
+    $dataComanda = htmlspecialchars($comanda['data'] ?? '');
+    $total = number_format($comanda['total'] ?? 0, 2);
     
     $html = '<!DOCTYPE html>
     <html lang="ca">
@@ -50,9 +52,9 @@ if (isset($_GET['generar_pdf'])) {
         </style>
     </head>
     <body>
-        <h1>Detall Comanda: ' . htmlspecialchars($comanda['id'] ?? '') . '</h1>
-        <p><strong>Client:</strong> ' . htmlspecialchars($comanda['usuari'] ?? $comanda['client'] ?? '') . '</p>
-        <p><strong>Data:</strong> ' . htmlspecialchars($comanda['data'] ?? '') . '</p>
+        <h1>Detall Comanda: ' . $idComanda . '</h1>
+        <p><strong>Client:</strong> ' . $nomClient . '</p>
+        <p><strong>Data:</strong> ' . $dataComanda . '</p>
         <table>
             <thead>
                 <tr>
@@ -63,15 +65,13 @@ if (isset($_GET['generar_pdf'])) {
             <tbody>';
     
     foreach ($comanda['productes'] ?? [] as $pid => $qty) {
-        $html .= '<tr>
-            <td>' . htmlspecialchars(obtenirNomProducte($pid, $dadesProductes)) . '</td>
-            <td>' . htmlspecialchars($qty) . '</td>
-        </tr>';
+        $nomProd = htmlspecialchars(obtenirNomProducte($pid, $dadesProductes));
+        $html .= '<tr><td>' . $nomProd . '</td><td>' . $qty . '</td></tr>';
     }
     
     $html .= '</tbody>
         </table>
-        <p class="total">Total: ' . number_format($comanda['total'] ?? 0, 2) . ' €</p>
+        <p class="total">Total: ' . $total . ' €</p>
         <p style="margin-top: 30px; font-size: 12px; color: #666;">Generat el ' . date('d/m/Y H:i') . '</p>
     </body>
     </html>';
@@ -79,7 +79,7 @@ if (isset($_GET['generar_pdf'])) {
     $dompdf->loadHtml($html);
     $dompdf->setPaper('A4', 'portrait');
     $dompdf->render();
-    $dompdf->stream("comanda_" . ($comanda['id'] ?? '') . ".pdf", array("Attachment" => true));
+    $dompdf->stream("comanda_" . $idComanda . ".pdf", array("Attachment" => true));
     exit;
 }
 ?>

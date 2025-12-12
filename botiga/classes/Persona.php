@@ -1,6 +1,5 @@
 <?php
 
-// Classe base simple
 class Persona {
     protected $usuari;
     protected $contrasenya;
@@ -16,12 +15,18 @@ class Persona {
         $this->email = $email;
     }
 
-    // Getters simples
-    public function obtenirUsuari() { return $this->usuari; }
-    public function obtenirRol() { return $this->rol; }
-    public function obtenirNom() { return $this->nom; }
+    public function obtenirUsuari() { 
+        return $this->usuari; 
+    }
     
-    // Implementació interfície
+    public function obtenirRol() { 
+        return $this->rol; 
+    }
+    
+    public function obtenirNom() { 
+        return $this->nom; 
+    }
+    
     public function obtenirDades() {
         return [
             'usuari' => $this->usuari,

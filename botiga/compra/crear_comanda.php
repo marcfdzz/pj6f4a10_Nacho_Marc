@@ -36,14 +36,14 @@ $total = 0;
 foreach ($items as $pid => $qty) {
     foreach ($dadesProductes as $p) {
         if (($p['id'] ?? '') == $pid) {
-            $total += floatval($p['preu'] ?? 0) * $qty;
+            $preu = floatval($p['preu'] ?? 0);
+            $total += $preu * $qty;
             break;
         }
     }
 }
 $totalAmbIva = $total * 1.21;
 
-// Crear Comanda
 $idComanda = date('Ymd_His') . '_' . substr(md5(uniqid()), 0, 8);
 $dataActual = date('c');
 
@@ -57,13 +57,10 @@ $comanda = new Comanda(
 
 $dadesComanda = $comanda->obtenirDades();
 
-// Guardar en area client
 GestorFitxers::guardarTot($dirArea . '/' . $idComanda, $dadesComanda);
 
-// Guardar en comandes_copia
 GestorFitxers::guardarTot(__DIR__ . '/../comandes_copia/' . $idComanda, $dadesComanda);
 
-// Buidar cistella
 $cistella->establirProductes([]);
 GestorFitxers::guardarTot($fitxerCistella, []);
 

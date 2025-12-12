@@ -15,9 +15,17 @@ class Producte {
         $this->imatge = $imatge;
     }
 
-    public function obtenirId() { return $this->id; }
-    public function obtenirNom() { return $this->nom; }
-    public function obtenirPreu() { return $this->preu; }
+    public function obtenirId() { 
+        return $this->id; 
+    }
+    
+    public function obtenirNom() { 
+        return $this->nom; 
+    }
+    
+    public function obtenirPreu() { 
+        return $this->preu; 
+    }
 
     public function obtenirDades() {
         return [

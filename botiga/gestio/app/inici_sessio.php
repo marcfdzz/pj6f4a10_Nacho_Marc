@@ -17,7 +17,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         $dbRol = $d['rol'] ?? $d['role'] ?? 'treballador';
 
         if ($dbUsuari === $usuariInput && password_verify($contrasenyaInput, $dbPass)) {
-             // Instanciar objecte Treballador (serveix per admin també)
              $trobat = new Treballador(
                 $dbUsuari, 
                 $dbPass, 

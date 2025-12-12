@@ -41,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (Mailer::send($adminEmail, $assumpte, $cos)) {
             $missatge = "La teva sol·licitud s'ha enviat correctament.";
         } else {
-           // Error: no s'ha pogut enviar el correu
            $fatal_error = true;
         }
     }

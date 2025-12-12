@@ -3,7 +3,6 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Producte.php';
 
-// Validar rol
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
@@ -12,7 +11,6 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['ro
 $fitxerProductes = __DIR__ . '/../productes/productes.json';
 $dadesProductes = GestorFitxers::llegirTot($fitxerProductes);
 
-// Gestionar esborrat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
     $dadesProductes = array_filter($dadesProductes, function($p) use ($deleteId) {
@@ -25,18 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Gestionar afegir (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') !== 'PUT') {
     $id = '';
     
-    // Determinar ID nou
     $maxId = 0;
     foreach ($dadesProductes as $p) {
         if (intval($p['id'] ?? 0) > $maxId) $maxId = intval($p['id']);
     }
     $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
 
-    // Instanciar Producte
     $producte = new Producte(
         $id,
         $_POST['nom'],
@@ -54,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     exit;
 }
 
-// Gestionar editar (PUT)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') === 'PUT') {
     $id = $_POST['id'] ?? '';
     
@@ -63,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
         exit;
     }
 
-    // Instanciar Producte
     $producte = new Producte(
         $id,
         $_POST['nom'],
@@ -75,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     $arrayProducte = $producte->obtenirDades();
     $arrayProducte['updated_at'] = date('c');
 
-    // Actualitzar llista
     foreach ($dadesProductes as $key => $p) {
         if (($p['id'] ?? '') === $id) {
             $arrayProducte['created_at'] = $p['created_at'] ?? date('c');
@@ -89,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     exit;
 }
 
-// Obtenir producte per editar
 $editProduct = null;
 if (isset($_GET['edit'])) {
     foreach ($dadesProductes as $p) {

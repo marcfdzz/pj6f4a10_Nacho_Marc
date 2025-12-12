@@ -3,7 +3,6 @@ session_start();
 require_once __DIR__ . '/../../classes/GestorFitxers.php';
 require_once __DIR__ . '/../../classes/Client.php';
 
-// Validar rol
 if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['rol'] !== 'treballador')) {
     header('Location: inici_sessio.php');
     exit;
@@ -12,16 +11,15 @@ if (empty($_SESSION['usuari']) || ($_SESSION['rol'] !== 'admin' && $_SESSION['ro
 $fitxerClients = __DIR__ . '/../clients/clients.json';
 $dadesClients = GestorFitxers::llegirTot($fitxerClients);
 
-// Funció per validar requisits mínims de contrasenya
 function validarContrasenya($contrasenya) {
     if (strlen($contrasenya) < 8) {
         return "La contrasenya ha de tenir com a mínim 8 caràcters";
     }
     if (!preg_match('/[A-Z]/', $contrasenya)) {
-        return "La contrasenya ha de contenir almenys una lletra majúscula";
+        return "La contrasenya ha de contenir almenys una majúscula";
     }
     if (!preg_match('/[a-z]/', $contrasenya)) {
-        return "La contrasenya ha de contenir almenys una lletra minúscula";
+        return "La contrasenya ha de contenir almenys una minúscula";
     }
     if (!preg_match('/[0-9]/', $contrasenya)) {
         return "La contrasenya ha de contenir almenys un número";
@@ -29,11 +27,9 @@ function validarContrasenya($contrasenya) {
     return true;
 }
 
-// Gestionar esborrat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELETE') {
     $deleteId = $_POST['delete_id'];
     
-    // Trobar client per obtenir nom d'usuari per esborrar carpeta
     $usuariEsborrar = null;
     foreach ($dadesClients as $c) {
         if (($c['id'] ?? '') === $deleteId) {
@@ -48,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     $dadesClients = array_values($dadesClients);
     GestorFitxers::guardarTot($fitxerClients, $dadesClients);
 
-    // Esborrar carpeta individual
     if ($usuariEsborrar) {
         $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $usuariEsborrar;
         if (file_exists($dirUsuari . '/dades')) {
@@ -60,18 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_method'] ?? '') === 'DELE
     exit;
 }
 
-// Gestionar afegir (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_method'] ?? '') !== 'PUT') {
     $id = '';
     
-    // Determinar ID nou
     $maxId = 0;
     foreach ($dadesClients as $c) {
         if (intval($c['id'] ?? 0) > $maxId) $maxId = intval($c['id']);
     }
     $id = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
 
-    // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
     if (!empty($_POST['contrasenya'])) {
         $validacio = validarContrasenya($_POST['contrasenya']);
@@ -83,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     }
 
     if (!isset($error)) {
-        // Instanciar objecte Client ($usuari, $contrasenya, $nom, $email, $adreca, $telefon, $id)
         $client = new Client(
             $_POST['usuari'],
             $passHash,
@@ -100,13 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
         $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
         $arrayClient['created_at'] = date('c');
 
-        // Afegir nou client
         $dadesClients[] = $arrayClient;
 
-        // Guardar llista principal
         GestorFitxers::guardarTot($fitxerClients, $dadesClients);
 
-        // Guardar dades individuals del client
         $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $client->obtenirUsuari();
         if (!is_dir($dirUsuari)) {
             mkdir($dirUsuari, 0777, true);
@@ -127,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
         exit;
     }
 
-    // Gestionar contrasenya amb validació
     $passHash = $_POST['hash_existent'] ?? '';
     if (!empty($_POST['contrasenya'])) {
         $validacio = validarContrasenya($_POST['contrasenya']);
@@ -139,7 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     }
 
     if (!isset($error)) {
-        // Instanciar objecte Client
         $client = new Client(
             $_POST['usuari'],
             $passHash,
@@ -155,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
         $arrayClient['card_encrypted'] = $_POST['card_encrypted'] ?? '';
         $arrayClient['card_exp'] = $_POST['card_exp'] ?? '';
 
-        // Actualitzar llista
         foreach ($dadesClients as $key => $c) {
             if (($c['id'] ?? '') === $id) {
                 $arrayClient['created_at'] = $c['created_at'] ?? date('c');
@@ -164,10 +149,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
             }
         }
 
-        // Guardar llista principal
         GestorFitxers::guardarTot($fitxerClients, $dadesClients);
 
-        // Guardar dades individuals del client
         $dirUsuari = __DIR__ . '/../../compra/area_clients/' . $client->obtenirUsuari();
         if (!is_dir($dirUsuari)) {
             mkdir($dirUsuari, 0777, true);
@@ -179,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save']) && ($_POST['_
     }
 }
 
-// Obtenir client per editar
 $editClient = null;
 if (isset($_GET['edit'])) {
     foreach ($dadesClients as $c) {
